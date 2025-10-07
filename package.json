@@ -1,0 +1,47 @@
+{
+  "name": "reading-attendance-tracker",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A responsive web application for tracking reading attendance and points in real time",
+  "private": true,
+  "scripts": {
+    "dev": "firebase emulators:start",
+    "build": "cd functions && npm run build",
+    "tailwind:build": "tailwindcss -i ./public/styles/tailwind.css -o ./public/styles/output.css --minify",
+    "deploy": "firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy:firestore": "firebase deploy --only firestore",
+    "test": "echo 'add tests in tests/' && exit 0",
+    "serve": "firebase serve",
+    "emulators": "firebase emulators:start",
+    "config:paystack": "node set-paystack-config.js"
+  },
+  "keywords": [
+    "reading",
+    "attendance",
+    "tracker",
+    "firebase",
+    "real-time",
+    "leaderboard"
+  ],
+  "author": "Reading Tracker Team",
+  "license": "MIT",
+  "main": "app-auth.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^4.9.0",
+    "minimist": "^1.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.19",
+    "typescript": "^5.9.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13"
+  }
+}

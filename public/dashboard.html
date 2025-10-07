@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Reading Streak</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <!--
+      Design System (Tailwind + Inter)
+      - Font: Inter (400, 600, 700)
+      - Background: #f9fafb
+      - Primary: Indigo 500/600 (#6366f1 / #4f46e5)
+      - Accent: Emerald 500 (#10b981)
+      - Layout: max-w-7xl mx-auto px-6, generous spacing (py-8/py-12)
+      - Components: rounded-2xl, shadow-md, hover:shadow-lg, transition
+    -->
+    <link rel="stylesheet" href="./styles/output.css">
+    <style>
+        /* Dashboard-specific styles */
+
+        /* Persistent Timer Header */
+        .persistent-timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--white);
+            border-radius: 16px;
+            padding: 16px 24px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--primary-color);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+        }
+
+        .persistent-timer.active {
+            display: flex;
+        }
+
+        .timer-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .timer-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .session-status {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .main-content {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .sidebar {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            position: sticky;
+            top: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .session-card {
+            border-left: 4px solid var(--primary-color);
+            background: linear-gradient(135deg, #f1f8e9 0%, var(--white) 100%);
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #e8f5e8 0%, var(--white) 100%);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .timer {
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 30px 0;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        .session-info {
+            background: var(--light-grey);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .session-info h4 {
+            color: var(--text-color);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .session-info p {
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .session-info strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .session-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            flex: 1;
+            min-width: 140px;
+            font-family: inherit;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--accent-color), #ffb300);
+            color: var(--text-color);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .user-info p {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .user-info strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--light-grey);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .leaderboard-preview {
+            background: var(--light-grey);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .leaderboard-preview h4 {
+            color: var(--text-color);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            font-weight: 700;
+            color: var(--primary-color);
+            min-width: 30px;
+            font-size: 1.1rem;
+        }
+
+        .name {
+            flex: 1;
+            margin: 0 10px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .points {
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 1.1rem;
+        }
+
+        .status {
+            padding: 16px 20px;
+            margin: 16px 0;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            color: #2e7d32;
+            border-color: #c8e6c9;
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, #ffebee, #f8d7da);
+            color: #c62828;
+            border-color: #ffcdd2;
+        }
+
+        .status.info {
+            background: linear-gradient(135deg, #e3f2fd, #d1ecf1);
+            color: #1565c0;
+            border-color: #bbdefb;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 15px;
+            }
+
+            .main-content {
+                padding: 25px;
+            }
+
+            .sidebar {
+                position: static;
+                padding: 20px;
+            }
+
+            .session-controls {
+                flex-direction: column;
+            }
+
+            button {
+                flex: none;
+                min-width: auto;
+            }
+
+            .timer {
+                font-size: 2.8rem;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .persistent-timer {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .timer {
+                font-size: 2.2rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .session-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script src="./layout.js"></script>
+    <!-- Persistent Timer Header -->
+    <div class="persistent-timer" id="persistent-timer">
+        <div class="timer-icon">⏱️</div>
+        <div>
+            <div class="timer-display" id="persistent-timer-display">00:00:00</div>
+            <div class="session-status" id="session-status">Session Active</div>
+        </div>
+    </div>
+
+    <div class="container max-w-7xl mx-auto px-6">
+        <div class="main-content">
+            <div class="header">
+                <h1>📚 Reading Dashboard</h1>
+                <p>Track your reading sessions and compete on the leaderboard</p>
+            </div>
+
+            <div id="status-container"></div>
+
+            <div class="card user-info" id="user-info" style="display: none;">
+                <h3>👤 User Information</h3>
+                <p><strong>User ID:</strong> <span id="user-id"></span></p>
+                <p><strong>Email:</strong> <span id="user-email"></span></p>
+                <p><strong>Payment Status:</strong> <span id="payment-status"></span></p>
+                <div class="session-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-sessions">0</div>
+                        <div class="stat-label">Total Sessions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-points">0</div>
+                        <div class="stat-label">Total Points</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-time">0h</div>
+                        <div class="stat-label">Total Time</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card session-card">
+                <h3>🎯 Session Management</h3>
+                <div id="session-info">
+                    <p>No active session. Click "Start Session" to begin.</p>
+                </div>
+                
+                <div class="timer" id="timer" style="display: none;">
+                    00:00:00
+                </div>
+
+                <div class="session-controls">
+                    <button id="start-session-btn" onclick="startSession()">
+                        <span id="start-btn-text">Start Session</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="leaderboard-preview">
+                <h4>🏆 Leaderboard Preview</h4>
+                <div id="leaderboard-content">
+                    <p style="color: #666; text-align: center;">Loading...</p>
+                </div>
+                <button onclick="openFullLeaderboard()" style="width: 100%; margin-top: 15px; font-size: 0.9rem;">
+                    View Full Leaderboard
+                </button>
+            </div>
+            
+            <!-- Navigation Links -->
+            <div style="background: var(--white); border-radius: 16px; padding: 20px; margin-top: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
+                <h4 style="color: var(--primary-color); margin-bottom: 15px; font-size: 1.1rem;">📱 Quick Links</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="index.html" style="color: var(--text-color); text-decoration: none; padding: 8px 12px; border-radius: 8px; background: var(--light-grey); transition: all 0.3s ease;">🏠 Home</a>
+                    <a href="about.html" style="color: var(--text-color); text-decoration: none; padding: 8px 12px; border-radius: 8px; background: var(--light-grey); transition: all 0.3s ease;">ℹ️ About</a>
+                    <a href="referral.html" style="color: var(--text-color); text-decoration: none; padding: 8px 12px; border-radius: 8px; background: var(--light-grey); transition: all 0.3s ease;">👥 Referral</a>
+                    <a href="ambassador.html" style="color: var(--text-color); text-decoration: none; padding: 8px 12px; border-radius: 8px; background: var(--light-grey); transition: all 0.3s ease;">🎓 Ambassador</a>
+                    <a href="#" style="color: #999; text-decoration: none; padding: 8px 12px; border-radius: 8px; background: #f5f5f5; opacity: 0.5; cursor: not-allowed;" title="Coming Soon">⭐ Premium</a>
+                    <a href="#" style="color: #999; text-decoration: none; padding: 8px 12px; border-radius: 8px; background: #f5f5f5; opacity: 0.5; cursor: not-allowed;" title="Not clickable">📚 Online class contact distinction tutors</a>
+                </div>
+            </div>
+            
+            <!-- Debug Section -->
+            <div style="background: var(--white); border-radius: 16px; padding: 20px; margin-top: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color);">
+                <h4 style="color: var(--primary-color); margin-bottom: 15px; font-size: 1.1rem;">🔧 Debug Tools</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="forceShowSessionButtons()" style="background: var(--accent-color); color: var(--text-color); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">🔧 Force Show Session Buttons</button>
+                    <button onclick="console.log('Current Session:', currentSession); console.log('Session Start Time:', sessionStartTime);" style="background: #e3f2fd; color: #1565c0; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">📊 Log Session Info</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-functions-compat.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script>
+        // Canonicalize origin: strip trailing dot which breaks CORS with Cloud Functions
+        (function() {
+            try {
+                if (location.hostname.endsWith('.')) {
+                    const fixed = location.protocol + '//' + location.hostname.replace(/\.+$/, '') + location.pathname + location.search + location.hash;
+                    location.replace(fixed);
+                }
+            } catch (_) {}
+        })();
+        const auth = window.firebaseAuth;
+        const db = window.firebaseDb;
+        const functions = window.firebaseFunctions || (firebase.app && firebase.app().functions ? firebase.app().functions('us-central1') : null);
+
+        // Ensure required handlers exist for buttons
+        function openFullLeaderboard() {
+            window.location.href = 'leaderboard.html';
+        }
+        async function startSession() {
+            try {
+                if (!auth || !functions) { console.error('Firebase not ready'); return; }
+                const user = auth.currentUser;
+                if (!user) { window.location.href = '/'; return; }
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const isPaid = !!(userDoc.exists && (userDoc.data().paymentStatus === 'paid' || userDoc.data().hasPaid));
+                if (!isPaid) {
+                    alert('Please complete your ₦500 payment to access this feature.');
+                    window.location.href = 'payment.html';
+                    return;
+                }
+                const startSessionFunction = functions.httpsCallable('startSession');
+                const result = await startSessionFunction({});
+                if (result && result.data && result.data.success) {
+                    window.location.href = 'session.html';
+                } else {
+                    console.warn('startSession returned no success flag');
+                }
+            } catch (e) {
+                console.error('startSession failed', e);
+            }
+        }
+        
+        let currentUser = null;
+        let currentSession = null;
+        let sessionTimer = null;
+        let sessionStartTime = null;
+        let sessionListener = null;
+        let userStatsListener = null;
+        let leaderboardListener = null;
+        
+        // Timer persistence functions
+        function saveTimerState() {
+            if (currentSession && sessionStartTime) {
+                localStorage.setItem('sessionData', JSON.stringify({
+                    sessionId: currentSession.id,
+                    startTime: sessionStartTime.toISOString(),
+                    userId: currentUser?.uid,
+                    status: (currentSession && currentSession.status) ? currentSession.status : 'active'
+                }));
+            }
+        }
+
+        function loadTimerState() {
+            try {
+                const sessionData = localStorage.getItem('sessionData');
+                if (sessionData && currentUser) {
+                    const data = JSON.parse(sessionData);
+                    if (data.userId === currentUser.uid) {
+                        sessionStartTime = new Date(data.startTime);
+                        showPersistentTimer();
+                        startTimer();
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading timer state:', error);
+            }
+            return false;
+        }
+
+        function clearTimerState() {
+            localStorage.removeItem('sessionData');
+            hidePersistentTimer();
+        }
+
+        function showPersistentTimer() {
+            document.getElementById('persistent-timer').classList.add('active');
+        }
+
+        function hidePersistentTimer() {
+            document.getElementById('persistent-timer').classList.remove('active');
+        }
+
+        // Countdown: display remaining time to 60 minutes, based on startedAt
+        function updatePersistentTimer() {
+            if (sessionStartTime) {
+                const now = new Date();
+                const elapsedMs = Math.max(0, now - sessionStartTime);
+                const totalMs = 60 * 60 * 1000; // 60 minutes
+                const remainingMs = Math.max(0, totalMs - elapsedMs);
+                const remMinutes = Math.floor(remainingMs / 60000);
+                const remSeconds = Math.floor((remainingMs % 60000) / 1000);
+
+                const countdown = `${remMinutes.toString().padStart(2, '0')}:${remSeconds.toString().padStart(2, '0')}`;
+                
+                const timerEl = document.getElementById('timer');
+                if (timerEl) timerEl.textContent = countdown;
+                const ptd = document.getElementById('persistent-timer-display');
+                if (ptd) ptd.textContent = countdown;
+
+                // Auto end when countdown hits zero
+                if (remainingMs === 0) {
+                    // Fire once per zero reach
+                    clearInterval(sessionTimer);
+                    sessionTimer = null;
+                    // Auto-complete session: call endSession function directly to award point
+                    (async () => {
+                        try {
+                            // Try callable function first
+                            const endSessionFunction = functions.httpsCallable('endSession');
+                            const result = await endSessionFunction({});
+                            if (result && result.data && result.data.success) {
+                                showStatus('✅ Session completed! You earned 1 point.', 'success');
+                            } else {
+                                showStatus('⚠️ Session ended, but no response from server. Points may update shortly.', 'info');
+                            }
+                        } catch (e) {
+                            console.error('Callable function failed, trying HTTP fallback:', e);
+                            try {
+                                // Fallback to HTTP function
+                                const token = await auth.currentUser?.getIdToken();
+                                const response = await fetch('https://us-central1-reading-streak.cloudfunctions.net/endSessionHTTP', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${token}`
+                                    }
+                                });
+                                
+                                if (response.ok) {
+                                    const result = await response.json();
+                                    if (result.success) {
+                                        showStatus('✅ Session completed! You earned 1 point.', 'success');
+                                    } else {
+                                        showStatus('⚠️ Session ended, but no response from server. Points may update shortly.', 'info');
+                                    }
+                                } else {
+                                    throw new Error('HTTP request failed');
+                                }
+                            } catch (httpError) {
+                                console.error('HTTP fallback also failed:', httpError);
+                                showStatus('⚠️ Could not notify server to end session. Please refresh.', 'error');
+                            }
+                        } finally {
+                            currentSession = null;
+                            sessionStartTime = null;
+                            updateSessionUI();
+                            clearTimerState();
+                        }
+                    })();
+                }
+            }
+        }
+        
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                showUserInfo(user);
+                
+                // Check payment status first
+                checkPaymentStatus();
+                
+                // Try to restore timer state first
+                if (!loadTimerState()) {
+                    loadActiveSession();
+                }
+                
+                loadUserStats();
+                loadLeaderboard();
+            } else {
+                showStatus('Please login first.', 'info');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1200);
+            }
+        });
+        
+        // Check payment status with fallbacks by email and owner whitelist
+        async function checkPaymentStatus() {
+            try {
+                const ownerEmail = 'buseiryh4@gmail.com';
+                const userRef = db.collection('users').doc(currentUser.uid);
+                const userDoc = await userRef.get();
+                let userData = userDoc.exists ? userDoc.data() : null;
+
+                // Create minimal profile if missing
+                if (!userDoc.exists) {
+                    await userRef.set({
+                        email: currentUser.email || 'anonymous@example.com',
+                        paymentStatus: false,
+                        hasPaid: false,
+                        points: 0,
+                        totalSessions: 0,
+                        totalSessionTime: 0,
+                        activeSession: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    userData = (await userRef.get()).data();
+                }
+
+                // Resolve payment by email if flags are false
+                let isPaid = !!(userData?.hasPaid || userData?.paymentStatus);
+                if (!isPaid && currentUser?.email) {
+                    const paySnap = await db.collection('payments')
+                        .where('email', '==', currentUser.email)
+                        .where('status', '==', 'success')
+                        .limit(1)
+                        .get();
+                    if (!paySnap.empty) {
+                        await userRef.set({
+                            hasPaid: true,
+                            paymentStatus: true,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                        isPaid = true;
+                    }
+                }
+
+                // Owner whitelist
+                if (!isPaid && currentUser?.email === ownerEmail) {
+                    await userRef.set({
+                        hasPaid: true,
+                        paymentStatus: true,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    isPaid = true;
+                }
+
+                document.getElementById('payment-status').textContent = isPaid ? 'Paid ✅' : 'Not Paid ❌';
+
+                if (!isPaid) {
+                    showStatus('Payment required to start sessions. Please make a payment first.', 'error');
+                    setTimeout(() => { window.location.href = 'payment.html'; }, 2000);
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                showStatus('❌ Error checking payment status: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // Load active session from Firestore
+        async function loadActiveSession() {
+            try {
+                if (!currentUser) return;
+
+                // Listen for active sessions
+                sessionListener = db.collection('sessions')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', 'in', ['active', 'paused'])
+                    .limit(1)
+                    .onSnapshot((snapshot) => {
+                        if (!snapshot.empty) {
+                            const sessionDoc = snapshot.docs[0];
+                            const sessionData = sessionDoc.data();
+                            
+                            currentSession = {
+                                id: sessionDoc.id,
+                                ...sessionData
+                            };
+                            
+                            if (currentSession.startAt) {
+                                sessionStartTime = currentSession.startAt.toDate();
+                                updateSessionUI();
+                                startTimer();
+                                showPersistentTimer();
+                                saveTimerState();
+                                showStatus('✅ Active session restored from Firestore!', 'success');
+                            }
+                        } else {
+                            // No active session
+                            currentSession = null;
+                            sessionStartTime = null;
+                            if (sessionTimer) {
+                                clearInterval(sessionTimer);
+                                sessionTimer = null;
+                            }
+                            updateSessionUI();
+                            clearTimerState();
+                        }
+                    }, (error) => {
+                        console.error('Error listening to sessions:', error);
+                    });
+                    
+            } catch (error) {
+                console.error('Error loading active session:', error);
+            }
+        }
+        
+        // Load user statistics
+        function loadUserStats() {
+            if (!currentUser) return;
+
+            userStatsListener = db.collection('users').doc(currentUser.uid)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        document.getElementById('total-sessions').textContent = userData.totalSessions || 0;
+                        document.getElementById('total-points').textContent = userData.points || 0;
+                        document.getElementById('total-time').textContent = formatTime(userData.totalSessionTime || 0);
+                    }
+                });
+        }
+        
+        // Load leaderboard preview
+        function loadLeaderboard() {
+            leaderboardListener = db.collection('users')
+                .orderBy('points', 'desc')
+                .limit(50)
+                .onSnapshot((snapshot) => {
+                    const leaderboardContent = document.getElementById('leaderboard-content');
+                    
+                    if (snapshot.empty) {
+                        leaderboardContent.innerHTML = '<p style="color: #666; text-align: center;">No data yet</p>';
+                        return;
+                    }
+                    
+                    // Filter to only paid users
+                    const paid = snapshot.docs
+                        .map(d => d.data())
+                        .filter(u => !!(u.paymentStatus || u.hasPaid));
+
+                    if (paid.length === 0) {
+                        leaderboardContent.innerHTML = '<p style="color: #666; text-align: center;">No paid users yet</p>';
+                        return;
+                    }
+
+                    // Sort by points desc and take top 5
+                    const top = paid
+                        .sort((a, b) => (b.points || 0) - (a.points || 0))
+                        .slice(0, 5);
+
+                    let html = '';
+                    top.forEach((userData, index) => {
+                        const rank = index + 1;
+                        const name = userData.email ? userData.email.split('@')[0] : 'Anonymous';
+                        const points = userData.points || 0;
+                        
+                        html += `
+                            <div class="leaderboard-item">
+                                <span class="rank">#${rank}</span>
+                                <span class="name">${name}</span>
+                                <span class="points">${points}pts</span>
+                            </div>
+                        `;
+                    });
+                    
+                    leaderboardContent.innerHTML = html;
+                });
+        }
+        
+        // Format time in hours
+        function formatTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            return `${hours}h`;
+        }
+        
+        // Show user information
+        async function showUserInfo(user) {
+            const userInfo = document.getElementById('user-info');
+            const userIdEl = document.getElementById('user-id');
+            const userEmailEl = document.getElementById('user-email');
+            if (userInfo) userInfo.style.display = 'block';
+            if (userIdEl) userIdEl.textContent = user.uid;
+            if (userEmailEl) userEmailEl.textContent = user.email || 'Anonymous User';
+        }
+        
+        // Start session
+        async function startSession() {
+            try {
+                const startBtn = document.getElementById('start-session-btn');
+                const startBtnText = document.getElementById('start-btn-text');
+                
+                if (startBtn) startBtn.disabled = true;
+                if (startBtnText) startBtnText.innerHTML = '<span class="loading-spinner"></span> Starting...';
+                
+                showStatus('Starting session...', 'info');
+                
+                // Call Cloud Function to start session
+                const startSessionFunction = functions.httpsCallable('startSession');
+                const result = await startSessionFunction({});
+                
+                if (result && result.data && result.data.success) {
+                    // Prefer session returned from backend
+                    let sessionObj = result.data.session;
+                    if (!sessionObj) {
+                        // Fallback: fetch from Firestore if not immediately returned
+                        const doc = await db.collection('sessions').doc(currentUser.uid).get();
+                        sessionObj = doc.exists ? { id: doc.id, ...doc.data() } : null;
+                    }
+                    if (!sessionObj) {
+                        // Gracefully inform user instead of throwing
+                        showStatus('Session is being created. Please try again in a moment.', 'info');
+                        if (startBtn) startBtn.disabled = false;
+                        if (startBtnText) startBtnText.textContent = 'Start Session';
+                        return;
+                    }
+
+                    currentSession = sessionObj;
+                    if (!currentSession.id) currentSession.id = currentUser.uid;
+                    if (!currentSession.status) currentSession.status = 'active';
+
+                    // Derive start time from server timestamps when available
+                    const ts = currentSession.startAt || currentSession.startedAt;
+                    sessionStartTime = ts && typeof ts.toDate === 'function' ? ts.toDate() : new Date();
+                    
+                    showStatus('✅ Session started successfully! Redirecting to session...', 'success');
+                    updateSessionUI();
+                    startTimer();
+                    showPersistentTimer();
+                    saveTimerState();
+                    // Navigate to dedicated session page
+                    setTimeout(() => { window.location.href = 'session.html'; }, 500);
+                } else {
+                    const errMsg = (result && result.data && result.data.error) ? result.data.error : 'Unknown error';
+                    showStatus('❌ Failed to start session: ' + errMsg, 'error');
+                }
+                
+                if (startBtn) startBtn.disabled = false;
+                if (startBtnText) startBtnText.textContent = 'Start Session';
+                
+            } catch (error) {
+                console.error('Error starting session:', error);
+                showStatus('❌ Error starting session: ' + error.message, 'error');
+                
+                const startBtn = document.getElementById('start-session-btn');
+                const startBtnText = document.getElementById('start-btn-text');
+                if (startBtn) startBtn.disabled = false;
+                if (startBtnText) startBtnText.textContent = 'Start Session';
+            }
+        }
+        
+        // Pause/Resume/End removed per request. Auto-end logic at 0 sec remains below.
+        
+        // Update session UI
+        function updateSessionUI() {
+            try {
+            const sessionInfo = document.getElementById('session-info');
+            const startBtn = document.getElementById('start-session-btn');
+            const timer = document.getElementById('timer');
+            
+            console.log('Updating session UI. Current session:', currentSession);
+            console.log('Session status:', currentSession?.status);
+            
+            if (currentSession && currentSession.id) {
+                // Ensure session has a status, default to 'active'
+                const sessionStatus = currentSession.status || 'active';
+                const statusText = sessionStatus === 'active' ? 'Active' : 'Paused';
+                const statusColor = sessionStatus === 'active' ? '#4CAF50' : '#FFC107';
+                
+                if (sessionInfo) {
+                sessionInfo.innerHTML = `
+                    <div class="session-info">
+                        <h4>📚 ${statusText} Session</h4>
+                        <p><strong>Session ID:</strong> ${currentSession.id}</p>
+                        <p><strong>Started:</strong> ${sessionStartTime ? sessionStartTime.toLocaleString() : 'Unknown'}</p>
+                        <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: 600;">${statusText}</span></p>
+                        <p><strong>Persistent:</strong> Yes - Timer survives page reloads</p>
+                    </div>
+                `;
+                }
+                
+                // Hide start button, show timer
+                if (startBtn) startBtn.style.display = 'none';
+                if (timer) timer.style.display = 'block';
+                
+                // Force button visibility as a fallback
+                setTimeout(() => {
+                    if (currentSession && currentSession.id) {
+                        // nothing else to force right now
+                        console.log('🔄 Forced button visibility update');
+                    }
+                }, 100);
+                
+            } else {
+                if (sessionInfo) sessionInfo.innerHTML = '<p>No active session. Click "Start Session" to begin.</p>';
+                if (startBtn) startBtn.style.display = 'inline-block';
+                if (timer) timer.style.display = 'none';
+                console.log('❌ No session - showing start button only');
+            }
+            } catch (e) {
+                console.error('updateSessionUI error:', e);
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            if (sessionTimer) {
+                clearInterval(sessionTimer);
+            }
+            sessionTimer = setInterval(() => {
+                updatePersistentTimer();
+                saveTimerState();
+            }, 1000);
+            // Immediate paint
+            updatePersistentTimer();
+        }
+        
+        // Open full leaderboard
+        function openFullLeaderboard() {
+            window.open('leaderboard.html', '_blank');
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const container = document.getElementById('status-container');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            container.appendChild(statusDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 5000);
+        }
+        
+        // Manual function to force show session buttons (for debugging)
+        function forceShowSessionButtons() {
+            const startBtn = document.getElementById('start-session-btn');
+            const timer = document.getElementById('timer');
+            if (currentSession && currentSession.id) {
+                if (startBtn) startBtn.style.display = 'none';
+                if (timer) timer.style.display = 'block';
+                showStatus('✅ Session UI forced: showing timer.', 'success');
+            } else {
+                if (startBtn) startBtn.style.display = 'inline-block';
+                if (timer) timer.style.display = 'none';
+                showStatus('❌ No active session found. Start a session first.', 'error');
+            }
+        }
+        
+        // Clean up listeners when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (sessionListener) sessionListener();
+            if (userStatsListener) userStatsListener();
+            if (leaderboardListener) leaderboardListener();
+            if (sessionTimer) clearInterval(sessionTimer);
+        });
+        
+        // Initialize
+        showStatus('Reading dashboard loaded!', 'info');
+    </script>
+</body>
+</html>
+
+
+
+
+

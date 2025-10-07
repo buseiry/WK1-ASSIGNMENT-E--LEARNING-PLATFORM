@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Payment Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="modern-styles.css">
+    <style>
+        body {
+            background: var(--secondary-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xxl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: var(--spacing-xxl);
+        }
+        .header h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--spacing-md);
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: var(--font-size-lg);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xxl);
+        }
+        .stat-card {
+            background: var(--bg-primary);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-normal);
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .stat-number {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-xs);
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+        .filters {
+            background: var(--light-grey);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            gap: var(--spacing-lg);
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+        .filter-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: var(--font-size-sm);
+        }
+        .filter-group select {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-family: inherit;
+            background: var(--bg-primary);
+            transition: border-color var(--transition-fast);
+        }
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-white);
+            border: none;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+            transition: all var(--transition-normal);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+        .payments-table {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+        .payments-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .payments-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-white);
+            padding: var(--spacing-lg) var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+            font-size: var(--font-size-sm);
+        }
+        .payments-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+            font-size: var(--font-size-sm);
+        }
+        .payments-table tr:hover {
+            background: var(--light-grey);
+        }
+        .status-badge {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending {
+            background: linear-gradient(135deg, #fff8e1, #fff3cd);
+            color: #f57c00;
+            border: 1px solid #ffe0b2;
+        }
+        .status-confirmed {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .status-rejected {
+            background: linear-gradient(135deg, #ffebee, #f8d7da);
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        .action-btn {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            margin: 0 var(--spacing-xs);
+            transition: all var(--transition-fast);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-confirm {
+            background: var(--primary-color);
+            color: var(--text-white);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+        .btn-confirm:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+        .btn-reject {
+            background: #f44336;
+            color: var(--text-white);
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+        .btn-reject:hover {
+            background: #d32f2f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+        .loading {
+            text-align: center;
+            padding: var(--spacing-xxl);
+            color: var(--text-secondary);
+            font-size: var(--font-size-lg);
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(76, 175, 80, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: var(--spacing-md);
+        }
+        .no-data {
+            text-align: center;
+            padding: var(--spacing-xxl);
+            color: var(--text-secondary);
+        }
+        .no-data h3 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+            font-size: var(--font-size-xl);
+        }
+        .user-info {
+            font-size: var(--font-size-xs);
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+        .reference {
+            font-family: 'Courier New', monospace;
+            font-size: var(--font-size-xs);
+            background: var(--light-grey);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            display: inline-block;
+            margin-top: var(--spacing-xs);
+        }
+        .timestamp {
+            font-size: var(--font-size-xs);
+            color: var(--text-light);
+        }
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: var(--spacing-xl);
+            }
+            .header h1 {
+                font-size: var(--font-size-3xl);
+            }
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .payments-table {
+                overflow-x: auto;
+            }
+            .payments-table table {
+                min-width: 800px;
+            }
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: var(--font-size-2xl);
+            }
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            .payments-table th,
+            .payments-table td {
+                padding: var(--spacing-sm);
+                font-size: var(--font-size-xs);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Admin Payment Verification</h1>
+            <p>Review and verify manual payments from users</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-payments">0</div>
+                <div class="stat-label">Total Payments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pending-payments">0</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="confirmed-payments">0</div>
+                <div class="stat-label">Confirmed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="rejected-payments">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="status-filter">Filter by Status:</label>
+                <select id="status-filter">
+                    <option value="">All Payments</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="method-filter">Filter by Method:</label>
+                <select id="method-filter">
+                    <option value="">All Methods</option>
+                    <option value="Ecobank">Ecobank</option>
+                    <option value="OPay">OPay</option>
+                </select>
+            </div>
+            <button class="refresh-btn" onclick="refreshPayments()">
+                🔄 Refresh Data
+            </button>
+        </div>
+
+        <div class="payments-table">
+            <div id="payments-content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading payment data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script>
+        const auth = window.firebaseAuth;
+        const db = window.firebaseDb;
+        
+        let paymentsListener = null;
+        
+        // Load payments data
+        function loadPayments() {
+            const statusFilter = document.getElementById('status-filter').value;
+            const methodFilter = document.getElementById('method-filter').value;
+            
+            if (paymentsListener) {
+                paymentsListener();
+            }
+            
+            let query = db.collection('manualPayments').orderBy('timestamp', 'desc');
+            
+            if (statusFilter) {
+                query = query.where('status', '==', statusFilter);
+            }
+            
+            paymentsListener = query.onSnapshot((snapshot) => {
+                const paymentsContent = document.getElementById('payments-content');
+                
+                if (snapshot.empty) {
+                    paymentsContent.innerHTML = `
+                        <div class="no-data">
+                            <h3>No payments found</h3>
+                            <p>No payments match your current filters.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                let totalCount = 0;
+                let pendingCount = 0;
+                let confirmedCount = 0;
+                let rejectedCount = 0;
+                
+                snapshot.docs.forEach((doc) => {
+                    const payment = doc.data();
+                    const paymentId = doc.id;
+                    
+                    totalCount++;
+                    if (payment.status === 'pending') pendingCount++;
+                    else if (payment.status === 'confirmed') confirmedCount++;
+                    else if (payment.status === 'rejected') rejectedCount++;
+                    
+                    // Apply method filter
+                    if (methodFilter && payment.method !== methodFilter) {
+                        return;
+                    }
+                    
+                    const userEmail = payment.userEmail || 'Unknown';
+                    const userName = userEmail.split('@')[0];
+                    const amount = payment.amount || 500;
+                    const method = payment.method || 'Unknown';
+                    const reference = payment.reference || 'N/A';
+                    const status = payment.status || 'pending';
+                    const submittedAt = payment.timestamp ? 
+                        payment.timestamp.toDate().toLocaleString() : 
+                        'Unknown';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>${userName}</strong>
+                                    <div class="user-info">${userEmail}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>₦${amount}</strong>
+                            </td>
+                            <td>${method}</td>
+                            <td>
+                                <div class="reference">${reference}</div>
+                            </td>
+                            <td>
+                                <span class="status-badge status-${status}">${status}</span>
+                            </td>
+                            <td>
+                                <div class="timestamp">${submittedAt}</div>
+                            </td>
+                            <td>
+                                ${status === 'pending' ? `
+                                    <button class="action-btn btn-confirm" onclick="updatePaymentStatus('${paymentId}', 'confirmed')">
+                                        ✓ Confirm
+                                    </button>
+                                    <button class="action-btn btn-reject" onclick="updatePaymentStatus('${paymentId}', 'rejected')">
+                                        ✗ Reject
+                                    </button>
+                                ` : `
+                                    <span class="status-badge status-${status}">${status}</span>
+                                `}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                paymentsContent.innerHTML = html;
+                
+                // Update stats
+                document.getElementById('total-payments').textContent = totalCount;
+                document.getElementById('pending-payments').textContent = pendingCount;
+                document.getElementById('confirmed-payments').textContent = confirmedCount;
+                document.getElementById('rejected-payments').textContent = rejectedCount;
+                
+            }, (error) => {
+                console.error('Error loading payments:', error);
+                document.getElementById('payments-content').innerHTML = `
+                    <div class="no-data">
+                        <h3>Error loading payments</h3>
+                        <p>Please try refreshing the page.</p>
+                    </div>
+                `;
+            });
+        }
+        
+        // Update payment status
+        async function updatePaymentStatus(paymentId, newStatus) {
+            try {
+                await db.collection('manualPayments').doc(paymentId).update({
+                    status: newStatus,
+                    verifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    verifiedBy: auth.currentUser?.email || 'admin'
+                });
+                
+                // Also update user payment status if confirmed
+                if (newStatus === 'confirmed') {
+                    const paymentDoc = await db.collection('manualPayments').doc(paymentId).get();
+                    const paymentData = paymentDoc.data();
+                    
+                    if (paymentData.userId) {
+                        await db.collection('users').doc(paymentData.userId).update({
+                            isPaid: true,
+                            paymentStatus: true,
+                            paymentVerifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }
+                
+                console.log(`Payment ${paymentId} ${newStatus} successfully`);
+                
+            } catch (error) {
+                console.error('Error updating payment status:', error);
+                alert('Error updating payment status. Please try again.');
+            }
+        }
+        
+        // Refresh payments
+        function refreshPayments() {
+            loadPayments();
+        }
+        
+        // Event listeners for filters
+        document.getElementById('status-filter').addEventListener('change', loadPayments);
+        document.getElementById('method-filter').addEventListener('change', loadPayments);
+        
+        // Initialize
+        loadPayments();
+        
+        // Clean up listener when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (paymentsListener) {
+                paymentsListener();
+            }
+        });
+        
+        console.log('Admin panel loaded');
+    </script>
+</body>
+</html>
+
+

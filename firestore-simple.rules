@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection - simplified
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can create/update their own data (with email verification)
+      allow create: if request.auth != null && 
+        request.auth.uid == userId && 
+        request.auth.token.email_verified == true &&
+        resource.data.keys().hasAll(['email', 'points', 'activeSession']) &&
+        resource.data.points == 0 &&
+        resource.data.activeSession == false;
+        
+      // Users can update their own data (but with restrictions)
+      allow update: if request.auth != null && 
+        request.auth.uid == userId && 
+        request.auth.token.email_verified == true &&
+        // Only allow specific fields to be updated
+        (request.resource.data.diff(resource.data).affectedKeys()
+         .hasOnly(['points', 'activeSession', 'lastActive', 'lastSessionCompleted']));
+    }
+    
+    // Sessions collection - simplified
+    match /sessions/{sessionId} {
+      // Users can read their own sessions
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid);
+        
+      // Users can create their own sessions
+      allow create: if request.auth != null && 
+        request.auth.uid == resource.data.userId &&
+        request.auth.token.email_verified == true &&
+        // Validate required fields
+        resource.data.keys().hasAll(['userId', 'startTime', 'completed']) &&
+        resource.data.completed == false &&
+        resource.data.endTime == null &&
+        resource.data.pointsAwarded == false;
+        
+      // Users can update their own sessions (but with restrictions)
+      allow update: if request.auth != null && 
+        resource.data.userId == request.auth.uid &&
+        request.auth.token.email_verified == true &&
+        // Only allow completion updates
+        (request.resource.data.diff(resource.data).affectedKeys()
+         .hasOnly(['endTime', 'completed', 'durationMinutes', 'pointsAwarded']));
+    }
+    
+    // Leaderboard - read-only for all authenticated users
+    match /leaderboard/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false; // No writing allowed
+    }
+  }
+}
+

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Attendance Tracker - Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1><i class="fas fa-book-reader"></i> Reading Tracker</h1>
+                <p>Track your reading sessions and earn points!</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button id="login-tab" class="tab-button active">Login</button>
+                <button id="register-tab" class="tab-button">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" minlength="6" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+            </form>
+
+            <div id="auth-message" class="auth-message"></div>
+            
+            <!-- Demo Notice -->
+            <div style="margin-top: 2rem; padding: 1rem; background: #f0f9ff; border-radius: 0.5rem; text-align: center;">
+                <h4><i class="fas fa-info-circle"></i> Demo Mode</h4>
+                <p>This is a test version. The interface is working, but Firebase needs to be configured for full functionality.</p>
+                <p><strong>Status:</strong> ✅ UI Working | ⚠️ Firebase Not Configured</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen (Hidden by default) -->
+    <div id="dashboard-screen" class="screen hidden">
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1><i class="fas fa-book-reader"></i> Reading Tracker</h1>
+                <div class="user-info">
+                    <span id="user-email">demo@example.com</span>
+                    <button id="logout-btn" class="btn btn-outline btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="user-points">0</h3>
+                        <p>Points</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="user-rank">-</h3>
+                        <p>Rank</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="session-status">Ready</h3>
+                        <p>Status</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Control -->
+            <div class="session-control">
+                <div class="session-timer hidden" id="session-timer">
+                    <div class="timer-display">
+                        <span id="timer-minutes">00</span>:<span id="timer-seconds">00</span>
+                    </div>
+                    <div class="timer-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <p class="timer-label">Session Progress</p>
+                    </div>
+                </div>
+                
+                <button id="start-session-btn" class="btn btn-success btn-large">
+                    <i class="fas fa-play"></i> Start Reading Session
+                </button>
+                
+                <div id="session-warning" class="session-warning hidden">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>You must stay connected for the full 60 minutes to earn points!</p>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="leaderboard-section">
+                <h2><i class="fas fa-trophy"></i> Global Leaderboard</h2>
+                <div class="leaderboard-container">
+                    <div id="leaderboard-list" class="leaderboard-list">
+                        <div class="loading-placeholder">
+                            <i class="fas fa-trophy"></i>
+                            <p>Demo Mode - Leaderboard will load when Firebase is configured</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="firebase-config-demo.js"></script>
+    <script>
+        // Simple demo functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, 1000);
+
+            // Tab switching
+            document.getElementById('login-tab').addEventListener('click', () => {
+                document.getElementById('login-tab').classList.add('active');
+                document.getElementById('register-tab').classList.remove('active');
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('register-form').classList.add('hidden');
+            });
+
+            document.getElementById('register-tab').addEventListener('click', () => {
+                document.getElementById('register-tab').classList.add('active');
+                document.getElementById('login-tab').classList.remove('active');
+                document.getElementById('register-form').classList.remove('hidden');
+                document.getElementById('login-form').classList.add('hidden');
+            });
+
+            // Demo login
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+            });
+
+            // Demo register
+            document.getElementById('register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+            });
+
+            // Demo logout
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                document.getElementById('dashboard-screen').classList.add('hidden');
+                document.getElementById('auth-screen').classList.remove('hidden');
+            });
+
+            // Demo session start
+            document.getElementById('start-session-btn').addEventListener('click', () => {
+                alert('Demo Mode: Session functionality requires Firebase configuration. Check README.md for setup instructions.');
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

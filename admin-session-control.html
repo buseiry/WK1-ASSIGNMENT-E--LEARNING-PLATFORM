@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Session Control - Reading Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #F5F5F5;
+            --accent-color: #FFC107;
+            --danger-color: #f44336;
+            --text-color: #333333;
+            --white: #FFFFFF;
+            --light-grey: #F8F9FA;
+            --border-color: #E0E0E0;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--secondary-color);
+            min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            background: var(--white);
+            border-bottom: 2px solid var(--danger-color);
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--danger-color), #d32f2f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: var(--light-grey);
+            color: var(--danger-color);
+        }
+
+        .admin-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--danger-color), #d32f2f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #e8f5e8 0%, var(--white) 100%);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .sessions-card {
+            background: linear-gradient(135deg, #fff3e0 0%, var(--white) 100%);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .users-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, var(--white) 100%);
+            border-left: 4px solid #2196F3;
+        }
+
+        /* Status Messages */
+        .status {
+            padding: 16px 20px;
+            margin: 16px 0;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            color: #2e7d32;
+            border-color: #c8e6c9;
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, #ffebee, #f8d7da);
+            color: #c62828;
+            border-color: #ffcdd2;
+        }
+
+        .status.info {
+            background: linear-gradient(135deg, #e3f2fd, #d1ecf1);
+            color: #1565c0;
+            border-color: #bbdefb;
+        }
+
+        .status.warning {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            color: #f57c00;
+            border-color: #ffcc02;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 25px;
+            background: var(--light-grey);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--light-grey);
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.active {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-badge.paused {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ffe0b2;
+        }
+
+        .status-badge.ended {
+            background: #f3e5f5;
+            color: #7b1fa2;
+            border: 1px solid #e1bee7;
+        }
+
+        .status-badge.paid {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-badge.unpaid {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        /* Buttons */
+        button {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            font-family: inherit;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), #d32f2f);
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--accent-color), #ffb300);
+            color: var(--text-color);
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-logo">🔒 Admin Control</div>
+            <div class="nav-links">
+                <a href="enhanced-session-test.html">⏱️ Sessions</a>
+                <a href="leaderboard.html">🏆 Leaderboard</a>
+                <a href="modern-admin-panel.html">⚙️ Admin Panel</a>
+                <span class="admin-badge">Admin</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Admin Session Control</h1>
+            <p>Manage all user sessions and force-end stuck sessions</p>
+        </div>
+
+        <div id="status-container"></div>
+
+        <!-- Stats Overview -->
+        <div class="card stats-card">
+            <h3>📊 Session Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="total-sessions">0</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="active-sessions">0</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="paused-sessions">0</div>
+                    <div class="stat-label">Paused Sessions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="total-users">0</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Sessions -->
+        <div class="card sessions-card">
+            <h3>⏱️ Active Sessions</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Email</th>
+                            <th>Session ID</th>
+                            <th>Status</th>
+                            <th>Started</th>
+                            <th>Duration</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active-sessions-table">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
+                                Loading sessions...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- All Users -->
+        <div class="card users-card">
+            <h3>👥 All Users</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Payment Status</th>
+                            <th>Active Session</th>
+                            <th>Total Sessions</th>
+                            <th>Points</th>
+                            <th>Last Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
+                                Loading users...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Atomic Session Manager -->
+    <script src="atomic-session-manager.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMJzYUsmZsf8KBWXQD8yFCdaurd5dCauY",
+            authDomain: "reading-streak.firebaseapp.com",
+            projectId: "reading-streak",
+            storageBucket: "reading-streak.firebasestorage.app",
+            messagingSenderId: "508966325542",
+            appId: "1:508966325542:web:82da076dc762ecc00fc5e7",
+            measurementId: "G-TF60SVCQ5W"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Initialize atomic session manager
+        const atomicSessionManager = new AtomicSessionManager(db, auth);
+        
+        let currentUser = null;
+        let sessionsListener = null;
+        let usersListener = null;
+        
+        // Check authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                
+                // Check if user is admin
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const userData = userDoc.exists ? userDoc.data() : null;
+                
+                if (!userData || !userData.admin) {
+                    showStatus('Access denied. Admin privileges required.', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'enhanced-session-test.html';
+                    }, 3000);
+                    return;
+                }
+                
+                showStatus('Admin access granted. Loading session data...', 'success');
+                loadSessionData();
+                loadUserData();
+            } else {
+                showStatus('Please login first.', 'info');
+                setTimeout(() => {
+                    window.location.href = 'simple-auth-test.html';
+                }, 2000);
+            }
+        });
+        
+        // Load session data
+        function loadSessionData() {
+            sessionsListener = db.collection('sessions')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    updateSessionStats(snapshot);
+                    updateActiveSessionsTable(snapshot);
+                }, (error) => {
+                    console.error('Error loading sessions:', error);
+                    showStatus('Error loading sessions: ' + error.message, 'error');
+                });
+        }
+        
+        // Load user data
+        function loadUserData() {
+            usersListener = db.collection('users')
+                .orderBy('lastActive', 'desc')
+                .onSnapshot((snapshot) => {
+                    updateUserStats(snapshot);
+                    updateUsersTable(snapshot);
+                }, (error) => {
+                    console.error('Error loading users:', error);
+                    showStatus('Error loading users: ' + error.message, 'error');
+                });
+        }
+        
+        // Update session statistics
+        function updateSessionStats(snapshot) {
+            let totalSessions = 0;
+            let activeSessions = 0;
+            let pausedSessions = 0;
+            
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                totalSessions++;
+                
+                if (data.status === 'active') {
+                    activeSessions++;
+                } else if (data.status === 'paused') {
+                    pausedSessions++;
+                }
+            });
+            
+            document.getElementById('total-sessions').textContent = totalSessions;
+            document.getElementById('active-sessions').textContent = activeSessions;
+            document.getElementById('paused-sessions').textContent = pausedSessions;
+        }
+        
+        // Update user statistics
+        function updateUserStats(snapshot) {
+            document.getElementById('total-users').textContent = snapshot.docs.length;
+        }
+        
+        // Update active sessions table
+        function updateActiveSessionsTable(snapshot) {
+            const tbody = document.getElementById('active-sessions-table');
+            
+            // Filter active and paused sessions
+            const activeSessions = snapshot.docs.filter(doc => {
+                const data = doc.data();
+                return data.status === 'active' || data.status === 'paused';
+            });
+            
+            if (activeSessions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
+                            No active sessions found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            activeSessions.forEach(doc => {
+                const data = doc.data();
+                const startTime = data.startTime ? data.startTime.toDate() : new Date();
+                const duration = formatDuration(Date.now() - startTime.getTime());
+                
+                html += `
+                    <tr>
+                        <td>${data.userEmail || 'Unknown'}</td>
+                        <td>${doc.id.substring(0, 8)}...</td>
+                        <td><span class="status-badge ${data.status}">${data.status}</span></td>
+                        <td>${startTime.toLocaleString()}</td>
+                        <td>${duration}</td>
+                        <td>
+                            <button class="btn-danger btn-small" onclick="forceEndSessionAtomic('${doc.id}', '${data.userId}')">
+                                Force End
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        // Update users table
+        function updateUsersTable(snapshot) {
+            const tbody = document.getElementById('users-table');
+            
+            if (snapshot.empty) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
+                            No users found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const lastActive = data.lastActive ? data.lastActive.toDate() : new Date();
+                
+                html += `
+                    <tr>
+                        <td>${data.email || 'Unknown'}</td>
+                        <td><span class="status-badge ${data.isPaid || data.paymentStatus ? 'paid' : 'unpaid'}">${data.isPaid || data.paymentStatus ? 'Paid' : 'Unpaid'}</span></td>
+                        <td><span class="status-badge ${data.activeSession ? 'active' : 'ended'}">${data.activeSession ? 'Yes' : 'No'}</span></td>
+                        <td>${data.totalSessions || 0}</td>
+                        <td>${data.points || 0}</td>
+                        <td>${lastActive.toLocaleString()}</td>
+                        <td>
+                            <button class="btn-secondary btn-small" onclick="viewUserSessions('${doc.id}')">
+                                View Sessions
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        // Force end a session atomically
+        async function forceEndSessionAtomic(sessionId, userId) {
+            if (!confirm('Are you sure you want to force end this session?')) {
+                return;
+            }
+            
+            try {
+                showStatus('Force ending session atomically...', 'info');
+                
+                // Use atomic session manager
+                const result = await atomicSessionManager.forceEndSessionAtomic(sessionId, currentUser.uid);
+                
+                if (result.success) {
+                    showStatus('✅ Session force ended atomically', 'success');
+                } else {
+                    showStatus('❌ ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error force ending session atomically:', error);
+                showStatus('❌ Error force ending session: ' + error.message, 'error');
+            }
+        }
+        
+        // View user sessions
+        function viewUserSessions(userId) {
+            // This would open a modal or navigate to a detailed view
+            showStatus('View user sessions feature coming soon', 'info');
+        }
+        
+        // Format duration
+        function formatDuration(milliseconds) {
+            const seconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes % 60}m`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${seconds % 60}s`;
+            } else {
+                return `${seconds}s`;
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const container = document.getElementById('status-container');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            container.appendChild(statusDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 5000);
+        }
+        
+        // Clean up listeners when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (sessionsListener) sessionsListener();
+            if (usersListener) usersListener();
+        });
+        
+        // Initialize
+        showStatus('Admin session control loaded', 'info');
+    </script>
+</body>
+</html>
+

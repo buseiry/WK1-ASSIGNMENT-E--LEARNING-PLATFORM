@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Active Session • Reading Streak</title>
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+	<link rel="stylesheet" href="./styles.css">
+	<meta name="description" content="Track your reading session and build consistent reading habits">
+    <link rel="stylesheet" href="./styles/output.css">
+</head>
+<body>
+    <script src="./layout.js"></script>
+	<header class="navbar">
+		<div class="container">
+			<div class="nav-brand">
+				<h1>📚 Reading Streak</h1>
+			</div>
+			<nav class="nav-links">
+				<a href="./dashboard.html" class="nav-link">Dashboard</a>
+				<a href="./leaderboard.html" class="nav-link">Leaderboard</a>
+			</nav>
+		</div>
+	</header>
+	
+	<main class="container max-w-7xl mx-auto px-6">
+		<div class="session-card bg-white rounded-2xl shadow-md border border-gray-100">
+			<div class="session-header">
+				<h2>Active Reading Session</h2>
+				<p>Focus on your reading and track your progress</p>
+			</div>
+			
+			<div class="timer-container">
+				<div class="timer-display" id="timer">00:00</div>
+				<div class="timer-status" id="timer-status">
+					<span id="status" class="status-indicator">Active</span>
+					<span id="session-info" class="session-info-text">Session started</span>
+				</div>
+			</div>
+			
+			<div class="session-controls">
+				<button id="pause-play" class="btn btn-primary btn-large" title="Click to pause/resume or press Space key">
+					<span class="btn-icon">⏸️</span>
+					<span class="btn-text">Pause</span>
+				</button>
+				<button id="verify-session" class="btn btn-secondary">Verify Session</button>
+				<button id="end-session" class="btn btn-danger">End Session</button>
+			</div>
+			
+			<div id="verification-result" class="status-message" style="display: none;"></div>
+		</div>
+	</main>
+
+	<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-functions-compat.js"></script>
+    <script src="./firebase-config.js"></script>
+	<script>
+	(function(){
+        const auth = window.firebaseAuth;
+        const db = window.firebaseDb;
+		
+		// Timer state management
+		const sessionStartTime = Date.now();
+		if (window.__readingStreakLayout && typeof window.__readingStreakLayout.seedSessionStart === 'function') {
+			try { window.__readingStreakLayout.seedSessionStart(sessionStartTime); } catch(_) {}
+		}
+		const el = document.getElementById('timer');
+		const statusEl = document.getElementById('status');
+		const sessionInfoEl = document.getElementById('session-info');
+		const pausePlayBtn = document.getElementById('pause-play');
+		
+		let timerInterval = null;
+		let totalPausedTime = 0;
+		let pauseStartTime = null;
+		let isPaused = false;
+		let sessionId = localStorage.getItem('activeSessionId');
+		
+		// Initialize timer state from localStorage if available
+		function loadTimerState() {
+			const savedState = localStorage.getItem(`timerState_${sessionId}`);
+			if (savedState) {
+				try {
+					const state = JSON.parse(savedState);
+					totalPausedTime = state.totalPausedTime || 0;
+					isPaused = state.isPaused || false;
+					pauseStartTime = state.pauseStartTime || null;
+				} catch (e) {
+					console.warn('Failed to load timer state:', e);
+				}
+			}
+		}
+		
+		// Save timer state to localStorage
+		function saveTimerState() {
+			if (sessionId) {
+				const state = {
+					totalPausedTime,
+					isPaused,
+					pauseStartTime,
+					lastSaved: Date.now()
+				};
+				localStorage.setItem(`timerState_${sessionId}`, JSON.stringify(state));
+			}
+		}
+		
+		// Update timer display
+		function updateTimer() {
+			if (!el) return;
+			
+			const now = Date.now();
+			let elapsedTime = now - sessionStartTime;
+			
+			// Subtract total paused time
+			elapsedTime -= totalPausedTime;
+			
+			// If currently paused, subtract current pause duration
+			if (isPaused && pauseStartTime) {
+				elapsedTime -= (now - pauseStartTime);
+			}
+			
+			const totalSeconds = Math.max(0, Math.floor(elapsedTime / 1000));
+			const minutes = Math.floor(totalSeconds / 60);
+			const seconds = totalSeconds % 60;
+			
+			el.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+			
+			// Update visual state
+			if (isPaused) {
+				el.className = 'timer-display paused';
+				statusEl.textContent = 'Paused';
+				statusEl.className = 'status-indicator';
+				sessionInfoEl.textContent = 'Session paused - click play to resume';
+			} else {
+				el.className = 'timer-display running';
+				statusEl.textContent = 'Active';
+				statusEl.className = 'status-indicator';
+				sessionInfoEl.textContent = 'Session running - click pause to take a break';
+			}
+		}
+		
+		// Start timer
+		function startTimer() {
+			if (timerInterval) {
+				clearInterval(timerInterval);
+			}
+		timerInterval = setInterval(updateTimer, 1000);
+			updateTimer(); // Initial update
+		}
+		
+		// Pause timer
+		function pauseTimer() {
+			if (isPaused) return;
+			
+			isPaused = true;
+			pauseStartTime = Date.now();
+			
+			if (timerInterval) {
+				clearInterval(timerInterval);
+				timerInterval = null;
+			}
+			
+			pausePlayBtn.innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">Resume</span>';
+			pausePlayBtn.className = 'btn btn-primary paused';
+			
+			updateTimer(); // Update display
+			saveTimerState();
+		}
+		
+		// Resume timer
+		function resumeTimer() {
+			if (!isPaused) return;
+			
+			if (pauseStartTime) {
+				totalPausedTime += (Date.now() - pauseStartTime);
+				pauseStartTime = null;
+			}
+			
+			isPaused = false;
+			
+			pausePlayBtn.innerHTML = '<span class="btn-icon">⏸️</span><span class="btn-text">Pause</span>';
+			pausePlayBtn.className = 'btn btn-primary';
+			
+			startTimer();
+			saveTimerState();
+		}
+		
+		// Toggle pause/play
+		function togglePausePlay() {
+			if (isPaused) {
+				resumeTimer();
+			} else {
+				pauseTimer();
+			}
+		}
+		
+		// Initialize timer
+		loadTimerState();
+		startTimer();
+		
+		// Add pause/play button event listener
+		if (pausePlayBtn) {
+			pausePlayBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				try {
+					togglePausePlay();
+				} catch (error) {
+					console.error('Error toggling pause/play:', error);
+					showResult('Error with timer control. Please refresh the page.', 'error');
+				}
+			});
+		}
+		
+		// Add keyboard shortcut for pause/play (Space key)
+		document.addEventListener('keydown', (e) => {
+			if (e.code === 'Space' && !e.target.matches('input, textarea, button')) {
+				e.preventDefault();
+				try {
+					togglePausePlay();
+				} catch (error) {
+					console.error('Error with keyboard shortcut:', error);
+				}
+			}
+		});
+		
+		// Cleanup on page unload
+		window.addEventListener('beforeunload', () => {
+			if (timerInterval) {
+				clearInterval(timerInterval);
+			}
+			saveTimerState();
+		});
+		
+		// Session verification functionality
+		const verifyBtn = document.getElementById('verify-session');
+		const endBtn = document.getElementById('end-session');
+		const resultDiv = document.getElementById('verification-result');
+		const statusDiv = document.getElementById('status');
+		
+		if (verifyBtn) {
+			verifyBtn.onclick = async () => {
+				const sessionId = localStorage.getItem('activeSessionId');
+				if (!sessionId) {
+					showResult('No active session found', 'error');
+					return;
+				}
+				
+				try {
+					verifyBtn.disabled = true;
+					verifyBtn.textContent = 'Verifying...';
+					
+					// Get session document
+					const sessionDoc = await db.collection('sessions').doc(sessionId).get();
+					if (!sessionDoc.exists) {
+						showResult('Session not found', 'error');
+						return;
+					}
+					
+					const sessionData = sessionDoc.data();
+					const user = auth.currentUser;
+					
+					// Verify session belongs to user
+					if (sessionData.userId !== user.uid) {
+						showResult('Session does not belong to you', 'error');
+						return;
+					}
+					
+					showResult('Session verified successfully!', 'success');
+					statusDiv.textContent = 'Verified';
+					statusDiv.style.color = 'green';
+					
+				} catch (error) {
+					console.error('Verification error:', error);
+					showResult('Verification failed: ' + (error.message || 'Unknown error'), 'error');
+				} finally {
+					verifyBtn.disabled = false;
+					verifyBtn.textContent = 'Verify Session';
+				}
+			};
+		}
+		
+		if (endBtn) {
+			endBtn.onclick = async () => {
+				if (confirm('Are you sure you want to end this session?')) {
+					const sessionId = localStorage.getItem('activeSessionId');
+					const user = auth.currentUser;
+					
+					if (!sessionId || !user) {
+						showResult('No active session to end', 'error');
+						return;
+					}
+					
+					try {
+						endBtn.disabled = true;
+						endBtn.textContent = 'Ending...';
+						
+						const now = new Date();
+						// Calculate actual session duration excluding paused time
+						let actualSessionDuration = (now - sessionStartTime) / (1000 * 60); // minutes
+						actualSessionDuration -= (totalPausedTime / (1000 * 60));
+						
+						// If currently paused, subtract current pause duration
+						if (isPaused && pauseStartTime) {
+							actualSessionDuration -= ((now - pauseStartTime) / (1000 * 60));
+						}
+						
+						const sessionDuration = Math.max(0, actualSessionDuration);
+						
+						// Minimum session duration (1 minute for easy testing)
+						const minDuration = 1;
+						if (sessionDuration < minDuration) {
+							showResult(`Session must be at least ${minDuration} minute long. Current: ${Math.round(sessionDuration * 60)} seconds`, 'error');
+							endBtn.disabled = false;
+							endBtn.textContent = 'End Session';
+							return;
+						}
+						
+						// Update session document
+						await db.collection('sessions').doc(sessionId).update({
+							endTime: firebase.firestore.FieldValue.serverTimestamp(),
+							completed: true,
+							durationMinutes: Math.round(sessionDuration)
+						});
+						
+						// Award points and update user
+						const userRef = db.collection('users').doc(user.uid);
+						const userSnap = await userRef.get();
+						const currentPoints = userSnap.exists() ? (userSnap.data().points || 0) : 0;
+						
+						await userRef.update({
+							points: currentPoints + 1,
+							activeSession: false,
+							lastSessionCompleted: firebase.firestore.FieldValue.serverTimestamp(),
+							lastActive: firebase.firestore.FieldValue.serverTimestamp()
+						});
+						
+						// Update session with points awarded
+						await db.collection('sessions').doc(sessionId).update({
+							pointsAwarded: true
+						});
+						
+						// Clean up timer
+						if (timerInterval) {
+						clearInterval(timerInterval);
+						}
+						
+					// Clean up timer state
+					if (sessionId) {
+						localStorage.removeItem(`timerState_${sessionId}`);
+					}
+					try { localStorage.removeItem('activeSessionStartMs'); } catch(_) {}
+						
+						statusDiv.textContent = 'Completed';
+						statusDiv.style.color = 'green';
+						verifyBtn.disabled = true;
+						pausePlayBtn.disabled = true;
+						
+						const durationText = sessionDuration < 1 ? 
+							`${Math.round(sessionDuration * 60)} seconds` : 
+							`${Math.round(sessionDuration)} minutes`;
+							
+						showResult(`Session completed! Duration: ${durationText}. You earned 1 point!`, 'success');
+						
+						// Clear session from localStorage
+						localStorage.removeItem('activeSessionId');
+						
+					} catch (error) {
+						console.error('Error ending session:', error);
+						showResult('Failed to end session: ' + (error.message || 'Unknown error'), 'error');
+						endBtn.disabled = false;
+						endBtn.textContent = 'End Session';
+					}
+				}
+			};
+		}
+		
+		function showResult(message, type) {
+			resultDiv.textContent = message;
+			resultDiv.className = type;
+			resultDiv.style.display = 'block';
+			setTimeout(() => {
+				resultDiv.style.display = 'none';
+			}, 5000);
+		}
+	})();
+	</script>
+	<script src="./app.js"></script>
+</body>
+</html>
+
+

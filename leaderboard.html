@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Reading Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #F5F5F5;
+            --accent-color: #FFC107;
+            --text-color: #333333;
+            --white: #FFFFFF;
+            --light-grey: #F8F9FA;
+            --border-color: #E0E0E0;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--secondary-color);
+            min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .stat-card.participants .stat-number { color: var(--primary-color); }
+        .stat-card.sessions .stat-number { color: #4caf50; }
+        .stat-card.points .stat-number { color: var(--accent-color); }
+        .stat-card.time .stat-number { color: #ff9800; }
+
+        .filters {
+            background: var(--light-grey);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .filter-group select {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: var(--white);
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            font-family: inherit;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .leaderboard-table {
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .leaderboard-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table th {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .leaderboard-table th:first-child {
+            border-top-left-radius: 16px;
+        }
+
+        .leaderboard-table th:last-child {
+            border-top-right-radius: 16px;
+        }
+
+        .leaderboard-table td {
+            padding: 18px 15px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .leaderboard-table tr:hover {
+            background: #f8f9ff;
+        }
+
+        .leaderboard-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank {
+            font-weight: 700;
+            font-size: 1.3rem;
+            text-align: center;
+            width: 60px;
+        }
+
+        .rank.gold { 
+            color: #ffd700; 
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        .rank.silver { 
+            color: #c0c0c0; 
+            text-shadow: 0 0 10px rgba(192, 192, 192, 0.3);
+        }
+        .rank.bronze { 
+            color: #cd7f32; 
+            text-shadow: 0 0 10px rgba(205, 127, 50, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .user-details h4 {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 4px;
+            font-size: 1.1rem;
+        }
+
+        .user-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .points { color: var(--accent-color); }
+        .sessions { color: var(--primary-color); }
+        .time { color: #ff9800; }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(76, 175, 80, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .no-data h3 {
+            margin-bottom: 10px;
+            color: var(--text-color);
+            font-size: 1.5rem;
+        }
+
+        .no-data p {
+            font-size: 1.1rem;
+        }
+
+        .current-user {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0) !important;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge.new { background: #e3f2fd; color: #1976d2; }
+        .badge.active { background: #e8f5e8; color: #2e7d32; }
+        .badge.top { background: #fff3e0; color: #f57c00; }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .leaderboard-table {
+                overflow-x: auto;
+            }
+
+            .leaderboard-table table {
+                min-width: 600px;
+            }
+
+            .user-info {
+                gap: 10px;
+            }
+
+            .avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .metrics {
+                gap: 10px;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 12px 8px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 10px 6px;
+                font-size: 0.85rem;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Leaderboard</h1>
+            <p>Top readers and session champions</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card participants">
+                <div class="stat-number" id="total-participants">0</div>
+                <div class="stat-label">Total Participants</div>
+            </div>
+            <div class="stat-card sessions">
+                <div class="stat-number" id="total-sessions">0</div>
+                <div class="stat-label">Total Sessions</div>
+            </div>
+            <div class="stat-card points">
+                <div class="stat-number" id="total-points">0</div>
+                <div class="stat-label">Total Points</div>
+            </div>
+            <div class="stat-card time">
+                <div class="stat-number" id="total-time">0h</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="sort-by">Sort by:</label>
+                <select id="sort-by">
+                    <option value="points">Points</option>
+                    <option value="totalSessions">Sessions</option>
+                    <option value="totalSessionTime">Time</option>
+                    <option value="lastActive">Last Active</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="limit">Show:</label>
+                <select id="limit">
+                    <option value="10">Top 10</option>
+                    <option value="25">Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                </select>
+            </div>
+            <button class="refresh-btn" onclick="refreshLeaderboard()">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <div class="leaderboard-table">
+            <div id="leaderboard-content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading leaderboard...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMJzYUsmZsf8KBWXQD8yFCdaurd5dCauY",
+            authDomain: "reading-streak.firebaseapp.com",
+            projectId: "reading-streak",
+            storageBucket: "reading-streak.firebasestorage.app",
+            messagingSenderId: "508966325542",
+            appId: "1:508966325542:web:82da076dc762ecc00fc5e7",
+            measurementId: "G-TF60SVCQ5W"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        let currentUser = null;
+        let leaderboardListener = null;
+        
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                loadLeaderboard();
+                loadStats();
+            } else {
+                // Still show leaderboard for non-authenticated users
+                loadLeaderboard();
+                loadStats();
+            }
+        });
+        
+        // Load leaderboard
+        function loadLeaderboard() {
+            const sortBy = document.getElementById('sort-by').value;
+            const limit = parseInt(document.getElementById('limit').value);
+            
+            if (leaderboardListener) {
+                leaderboardListener();
+            }
+            
+            leaderboardListener = db.collection('users')
+                .orderBy(sortBy, 'desc')
+                .limit(limit)
+                .onSnapshot((snapshot) => {
+                    const leaderboardContent = document.getElementById('leaderboard-content');
+                    
+                    if (snapshot.empty) {
+                        leaderboardContent.innerHTML = `
+                            <div class="no-data">
+                                <h3>No data yet</h3>
+                                <p>Be the first to start a reading session!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    let html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>User</th>
+                                    <th>Points</th>
+                                    <th>Sessions</th>
+                                    <th>Total Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    snapshot.docs.forEach((doc, index) => {
+                        const userData = doc.data();
+                        const rank = index + 1;
+                        const isCurrentUser = currentUser && doc.id === currentUser.uid;
+                        const rowClass = isCurrentUser ? 'current-user' : '';
+                        
+                        const name = userData.email ? userData.email.split('@')[0] : 'Anonymous';
+                        const points = userData.points || 0;
+                        const sessions = userData.totalSessions || 0;
+                        const time = formatTime(userData.totalSessionTime || 0);
+                        const avatar = name.charAt(0).toUpperCase();
+                        
+                        let rankClass = '';
+                        if (rank === 1) rankClass = 'gold';
+                        else if (rank === 2) rankClass = 'silver';
+                        else if (rank === 3) rankClass = 'bronze';
+                        
+                        html += `
+                            <tr class="${rowClass}">
+                                <td class="rank ${rankClass}">#${rank}</td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">${avatar}</div>
+                                        <div class="user-details">
+                                            <h4>${name}${isCurrentUser ? ' (You)' : ''}</h4>
+                                            <p>${userData.email || 'Anonymous User'}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="metrics">
+                                        <div>
+                                            <div class="metric-value points">${points}</div>
+                                            <div class="metric-label">Points</div>
+                                        </div>
+                                        <div>
+                                            <div class="metric-value sessions">${sessions}</div>
+                                            <div class="metric-label">Sessions</div>
+                                        </div>
+                                        <div>
+                                            <div class="metric-value time">${time}</div>
+                                            <div class="metric-label">Hours</div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    leaderboardContent.innerHTML = html;
+                }, (error) => {
+                    console.error('Error loading leaderboard:', error);
+                    document.getElementById('leaderboard-content').innerHTML = `
+                        <div class="no-data">
+                            <h3>Error loading leaderboard</h3>
+                            <p>Please try refreshing the page.</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Load statistics
+        function loadStats() {
+            // Load total participants
+            db.collection('users').get().then((snapshot) => {
+                document.getElementById('total-participants').textContent = snapshot.size;
+            });
+            
+            // Load total sessions
+            db.collection('sessions').get().then((snapshot) => {
+                document.getElementById('total-sessions').textContent = snapshot.size;
+            });
+            
+            // Load total points and time
+            db.collection('users').get().then((snapshot) => {
+                let totalPoints = 0;
+                let totalTime = 0;
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    totalPoints += data.points || 0;
+                    totalTime += data.totalSessionTime || 0;
+                });
+                
+                document.getElementById('total-points').textContent = totalPoints;
+                document.getElementById('total-time').textContent = formatTime(totalTime);
+            });
+        }
+        
+        // Format time in hours
+        function formatTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            if (hours > 0) {
+                return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+            }
+            return `${mins}m`;
+        }
+        
+        // Refresh leaderboard
+        function refreshLeaderboard() {
+            loadLeaderboard();
+            loadStats();
+        }
+        
+        // Event listeners for filters
+        document.getElementById('sort-by').addEventListener('change', loadLeaderboard);
+        document.getElementById('limit').addEventListener('change', loadLeaderboard);
+        
+        // Clean up listener when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (leaderboardListener) {
+                leaderboardListener();
+            }
+        });
+        
+        // Initialize
+        console.log('Leaderboard page loaded');
+    </script>
+</body>
+</html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Reading Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #F5F5F5;
+            --accent-color: #FFC107;
+            --text-color: #333333;
+            --white: #FFFFFF;
+            --light-grey: #F8F9FA;
+            --border-color: #E0E0E0;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--secondary-color);
+            min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .stat-card.participants .stat-number { color: var(--primary-color); }
+        .stat-card.sessions .stat-number { color: #4caf50; }
+        .stat-card.points .stat-number { color: var(--accent-color); }
+        .stat-card.time .stat-number { color: #ff9800; }
+
+        .filters {
+            background: var(--light-grey);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .filter-group select {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: var(--white);
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            font-family: inherit;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .leaderboard-table {
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .leaderboard-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table th {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .leaderboard-table th:first-child {
+            border-top-left-radius: 16px;
+        }
+
+        .leaderboard-table th:last-child {
+            border-top-right-radius: 16px;
+        }
+
+        .leaderboard-table td {
+            padding: 18px 15px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .leaderboard-table tr:hover {
+            background: #f8f9ff;
+        }
+
+        .leaderboard-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank {
+            font-weight: 700;
+            font-size: 1.3rem;
+            text-align: center;
+            width: 60px;
+        }
+
+        .rank.gold { 
+            color: #ffd700; 
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        .rank.silver { 
+            color: #c0c0c0; 
+            text-shadow: 0 0 10px rgba(192, 192, 192, 0.3);
+        }
+        .rank.bronze { 
+            color: #cd7f32; 
+            text-shadow: 0 0 10px rgba(205, 127, 50, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .user-details h4 {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 4px;
+            font-size: 1.1rem;
+        }
+
+        .user-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .points { color: var(--accent-color); }
+        .sessions { color: var(--primary-color); }
+        .time { color: #ff9800; }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(76, 175, 80, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .no-data h3 {
+            margin-bottom: 10px;
+            color: var(--text-color);
+            font-size: 1.5rem;
+        }
+
+        .no-data p {
+            font-size: 1.1rem;
+        }
+
+        .current-user {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0) !important;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge.new { background: #e3f2fd; color: #1976d2; }
+        .badge.active { background: #e8f5e8; color: #2e7d32; }
+        .badge.top { background: #fff3e0; color: #f57c00; }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .leaderboard-table {
+                overflow-x: auto;
+            }
+
+            .leaderboard-table table {
+                min-width: 600px;
+            }
+
+            .user-info {
+                gap: 10px;
+            }
+
+            .avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .metrics {
+                gap: 10px;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 12px 8px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 10px 6px;
+                font-size: 0.85rem;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 Leaderboard</h1>
+            <p>Top readers and session champions</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card participants">
+                <div class="stat-number" id="total-participants">0</div>
+                <div class="stat-label">Total Participants</div>
+            </div>
+            <div class="stat-card sessions">
+                <div class="stat-number" id="total-sessions">0</div>
+                <div class="stat-label">Total Sessions</div>
+            </div>
+            <div class="stat-card points">
+                <div class="stat-number" id="total-points">0</div>
+                <div class="stat-label">Total Points</div>
+            </div>
+            <div class="stat-card time">
+                <div class="stat-number" id="total-time">0h</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="sort-by">Sort by:</label>
+                <select id="sort-by">
+                    <option value="points">Points</option>
+                    <option value="totalSessions">Sessions</option>
+                    <option value="totalSessionTime">Time</option>
+                    <option value="lastActive">Last Active</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="limit">Show:</label>
+                <select id="limit">
+                    <option value="10">Top 10</option>
+                    <option value="25">Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                </select>
+            </div>
+            <button class="refresh-btn" onclick="refreshLeaderboard()">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <div class="leaderboard-table">
+            <div id="leaderboard-content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading leaderboard...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMJzYUsmZsf8KBWXQD8yFCdaurd5dCauY",
+            authDomain: "reading-streak.firebaseapp.com",
+            projectId: "reading-streak",
+            storageBucket: "reading-streak.firebasestorage.app",
+            messagingSenderId: "508966325542",
+            appId: "1:508966325542:web:82da076dc762ecc00fc5e7",
+            measurementId: "G-TF60SVCQ5W"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        let currentUser = null;
+        let leaderboardListener = null;
+        
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                loadLeaderboard();
+                loadStats();
+            } else {
+                // Still show leaderboard for non-authenticated users
+                loadLeaderboard();
+                loadStats();
+            }
+        });
+        
+        // Load leaderboard
+        function loadLeaderboard() {
+            const sortBy = document.getElementById('sort-by').value;
+            const limit = parseInt(document.getElementById('limit').value);
+            
+            if (leaderboardListener) {
+                leaderboardListener();
+            }
+            
+            leaderboardListener = db.collection('users')
+                .orderBy(sortBy, 'desc')
+                .limit(limit)
+                .onSnapshot((snapshot) => {
+                    const leaderboardContent = document.getElementById('leaderboard-content');
+                    
+                    if (snapshot.empty) {
+                        leaderboardContent.innerHTML = `
+                            <div class="no-data">
+                                <h3>No data yet</h3>
+                                <p>Be the first to start a reading session!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    let html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>User</th>
+                                    <th>Points</th>
+                                    <th>Sessions</th>
+                                    <th>Total Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    snapshot.docs.forEach((doc, index) => {
+                        const userData = doc.data();
+                        const rank = index + 1;
+                        const isCurrentUser = currentUser && doc.id === currentUser.uid;
+                        const rowClass = isCurrentUser ? 'current-user' : '';
+                        
+                        const name = userData.email ? userData.email.split('@')[0] : 'Anonymous';
+                        const points = userData.points || 0;
+                        const sessions = userData.totalSessions || 0;
+                        const time = formatTime(userData.totalSessionTime || 0);
+                        const avatar = name.charAt(0).toUpperCase();
+                        
+                        let rankClass = '';
+                        if (rank === 1) rankClass = 'gold';
+                        else if (rank === 2) rankClass = 'silver';
+                        else if (rank === 3) rankClass = 'bronze';
+                        
+                        html += `
+                            <tr class="${rowClass}">
+                                <td class="rank ${rankClass}">#${rank}</td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">${avatar}</div>
+                                        <div class="user-details">
+                                            <h4>${name}${isCurrentUser ? ' (You)' : ''}</h4>
+                                            <p>${userData.email || 'Anonymous User'}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="metrics">
+                                        <div>
+                                            <div class="metric-value points">${points}</div>
+                                            <div class="metric-label">Points</div>
+                                        </div>
+                                        <div>
+                                            <div class="metric-value sessions">${sessions}</div>
+                                            <div class="metric-label">Sessions</div>
+                                        </div>
+                                        <div>
+                                            <div class="metric-value time">${time}</div>
+                                            <div class="metric-label">Hours</div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    leaderboardContent.innerHTML = html;
+                }, (error) => {
+                    console.error('Error loading leaderboard:', error);
+                    document.getElementById('leaderboard-content').innerHTML = `
+                        <div class="no-data">
+                            <h3>Error loading leaderboard</h3>
+                            <p>Please try refreshing the page.</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Load statistics
+        function loadStats() {
+            // Load total participants
+            db.collection('users').get().then((snapshot) => {
+                document.getElementById('total-participants').textContent = snapshot.size;
+            });
+            
+            // Load total sessions
+            db.collection('sessions').get().then((snapshot) => {
+                document.getElementById('total-sessions').textContent = snapshot.size;
+            });
+            
+            // Load total points and time
+            db.collection('users').get().then((snapshot) => {
+                let totalPoints = 0;
+                let totalTime = 0;
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    totalPoints += data.points || 0;
+                    totalTime += data.totalSessionTime || 0;
+                });
+                
+                document.getElementById('total-points').textContent = totalPoints;
+                document.getElementById('total-time').textContent = formatTime(totalTime);
+            });
+        }
+        
+        // Format time in hours
+        function formatTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            if (hours > 0) {
+                return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+            }
+            return `${mins}m`;
+        }
+        
+        // Refresh leaderboard
+        function refreshLeaderboard() {
+            loadLeaderboard();
+            loadStats();
+        }
+        
+        // Event listeners for filters
+        document.getElementById('sort-by').addEventListener('change', loadLeaderboard);
+        document.getElementById('limit').addEventListener('change', loadLeaderboard);
+        
+        // Clean up listener when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (leaderboardListener) {
+                leaderboardListener();
+            }
+        });
+        
+        // Initialize
+        console.log('Leaderboard page loaded');
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Attendance Tracker - Demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .demo-notice {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 1rem;
+        }
+        .demo-notice h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        .demo-notice p {
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+        .demo-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .demo-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .demo-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 3rem;
+            color: #2563eb;
+            margin-bottom: 1rem;
+        }
+        .feature-card h3 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .feature-card p {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        .setup-steps {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+        }
+        .setup-steps h3 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .setup-steps ol {
+            color: #4b5563;
+            line-height: 1.8;
+        }
+        .setup-steps li {
+            margin-bottom: 0.5rem;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="screen">
+        <div class="auth-container" style="max-width: 800px;">
+            <div class="demo-notice">
+                <h2><i class="fas fa-rocket"></i> Reading Attendance Tracker</h2>
+                <p><strong>Demo Version - Ready to Configure!</strong></p>
+                <p>This is a complete, production-ready application. Follow the setup steps below to get it running.</p>
+                
+                <div class="demo-buttons">
+                    <a href="index.html" class="demo-btn">
+                        <i class="fas fa-eye"></i> View Full App
+                    </a>
+                    <a href="README.md" class="demo-btn">
+                        <i class="fas fa-book"></i> Read Setup Guide
+                    </a>
+                    <a href="CONFIGURATION.md" class="demo-btn">
+                        <i class="fas fa-cog"></i> Configuration Guide
+                    </a>
+                </div>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Real-time Session Tracking</h3>
+                    <p>Track reading sessions with server-side timestamps and anti-cheat measures. Users must stay connected for 60 minutes to earn points.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3>Payment Integration</h3>
+                    <p>Paystack integration for Nigerian users. First user is free, subsequent users pay ₦500 to activate their accounts.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h3>Global Leaderboard</h3>
+                    <p>Real-time leaderboard showing top readers with points and rankings. Updates instantly for all connected users.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Responsive Design</h3>
+                    <p>Mobile-first design that works perfectly on desktop, tablet, and mobile devices with touch-friendly interface.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Security Features</h3>
+                    <p>Email verification, server-side validation, atomic transactions, and comprehensive anti-cheat measures.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h3>Firebase Backend</h3>
+                    <p>Scalable Firebase infrastructure with Cloud Functions, Firestore database, and Firebase Authentication.</p>
+                </div>
+            </div>
+
+            <div class="setup-steps">
+                <h3><i class="fas fa-tools"></i> Quick Setup Steps</h3>
+                <ol>
+                    <li><strong>Create Firebase Project:</strong> Go to <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a> and create a new project</li>
+                    <li><strong>Enable Services:</strong> Enable Authentication (Email/Password), Firestore Database, and Cloud Functions</li>
+                    <li><strong>Get Configuration:</strong> Copy your Firebase config from Project Settings > General > Your apps</li>
+                    <li><strong>Update Config:</strong> Replace the placeholder values in <code>firebase-config.js</code> with your actual Firebase config</li>
+                    <li><strong>Install Firebase CLI:</strong> Run <code>npm install -g firebase-tools</code></li>
+                    <li><strong>Login to Firebase:</strong> Run <code>firebase login</code></li>
+                    <li><strong>Initialize Project:</strong> Run <code>firebase init</code> and select Hosting and Functions</li>
+                    <li><strong>Deploy:</strong> Run <code>firebase deploy</code></li>
+                </ol>
+
+                <div class="code-block">
+# Quick setup commands:
+npm install -g firebase-tools
+firebase login
+firebase init
+firebase deploy
+                </div>
+
+                <p><strong>Note:</strong> The app will show a loading screen until Firebase is properly configured. Once configured, you'll see the full authentication and dashboard interface.</p>
+            </div>
+
+            <div class="setup-steps">
+                <h3><i class="fas fa-info-circle"></i> Current Status</h3>
+                <p><strong>✅ Frontend Complete:</strong> All HTML, CSS, and JavaScript files are ready</p>
+                <p><strong>✅ Backend Complete:</strong> Cloud Functions and Firestore rules are configured</p>
+                <p><strong>✅ Payment Integration:</strong> Paystack integration is implemented</p>
+                <p><strong>✅ Security Rules:</strong> Firestore security rules are set up</p>
+                <p><strong>⚠️ Configuration Needed:</strong> Firebase project configuration required</p>
+                <p><strong>⚠️ Payment Setup:</strong> Paystack keys need to be configured</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem; padding: 1rem; background: #f0f9ff; border-radius: 0.5rem;">
+                <h4><i class="fas fa-lightbulb"></i> Need Help?</h4>
+                <p>Check the <code>README.md</code> file for detailed setup instructions, or review <code>CONFIGURATION.md</code> for configuration help.</p>
+                <p>The application is production-ready and includes all requested features!</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
+
+
+

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Streak - Track Your Reading Progress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="modern-styles.css">
+    <style>
+        body {
+            background: var(--secondary-color);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-white);
+            padding: 80px 20px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .hero-section p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .nav-bar {
+            background: var(--white);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: var(--light-grey);
+            color: var(--primary-color);
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+        
+        .cta-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 180px;
+        }
+        
+        .cta-btn.primary {
+            background: var(--white);
+            color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.3);
+        }
+        
+        .cta-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,255,255,0.4);
+        }
+        
+        .cta-btn.secondary {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid var(--white);
+        }
+        
+        .cta-btn.secondary:hover {
+            background: var(--white);
+            color: var(--primary-color);
+        }
+        
+        .features-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .feature-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            color: var(--text-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .quick-links {
+            background: var(--light-grey);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .quick-links h2 {
+            color: var(--text-color);
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+        
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .link-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            color: var(--primary-color);
+        }
+        
+        .link-card h4 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .link-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-section p {
+                font-size: 1.1rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-logo">📚 Reading Streak</div>
+            <div class="nav-links">
+                <a href="leaderboard.html">🏆 Leaderboard</a>
+                <a href="enhanced-session-test.html">⏱️ Sessions</a>
+                <a href="simple-auth-test.html">🔐 Auth</a>
+                <a href="manual-payment.html">💰 Payment</a>
+                <a href="modern-admin-panel.html">⚙️ Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <h1>📚 Reading Streak</h1>
+        <p>Track your reading sessions, earn points, and compete with friends in our reading community!</p>
+        
+        <div class="cta-buttons">
+            <a href="simple-auth-test.html" class="cta-btn primary">Get Started</a>
+            <a href="leaderboard.html" class="cta-btn secondary">View Leaderboard</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⏱️</div>
+                <h3>Session Tracking</h3>
+                <p>Start focused reading sessions with our persistent timer that survives page reloads and browser restarts.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>Points & Rewards</h3>
+                <p>Earn points for completed sessions and climb the leaderboard to compete with other readers.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Progress Analytics</h3>
+                <p>Track your reading progress with detailed statistics and session history.</p>
+            </div>
+        </div>
+        
+        <div class="quick-links">
+            <h2>Quick Access</h2>
+            <div class="links-grid">
+                <a href="simple-auth-test.html" class="link-card">
+                    <h4>🔐 Authentication</h4>
+                    <p>Login, register, or test anonymous authentication</p>
+                </a>
+                
+                <a href="enhanced-session-test.html" class="link-card">
+                    <h4>⏱️ Session Manager</h4>
+                    <p>Start, pause, resume, and end reading sessions</p>
+                </a>
+                
+                <a href="manual-payment.html" class="link-card">
+                    <h4>💰 Payment</h4>
+                    <p>Pay ₦500 to activate unlimited sessions</p>
+                </a>
+                
+                <a href="leaderboard.html" class="link-card">
+                    <h4>🏆 Leaderboard</h4>
+                    <p>See top readers and compete with friends</p>
+                </a>
+                
+                <a href="modern-admin-panel.html" class="link-card">
+                    <h4>⚙️ Admin Panel</h4>
+                    <p>Admin tools for payment verification</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMJzYUsmZsf8KBWXQD8yFCdaurd5dCauY",
+            authDomain: "reading-streak.firebaseapp.com",
+            projectId: "reading-streak",
+            storageBucket: "reading-streak.firebasestorage.app",
+            messagingSenderId: "508966325542",
+            appId: "1:508966325542:web:82da076dc762ecc00fc5e7",
+            measurementId: "G-TF60SVCQ5W"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Check authentication state and update nav
+        auth.onAuthStateChanged((user) => {
+            const navLinks = document.querySelector('.nav-links');
+            if (user) {
+                // Add user info to nav
+                navLinks.innerHTML = `
+                    <span style="color: var(--primary-color); font-weight: 600;">👤 ${user.email || 'Anonymous'}</span>
+                    <a href="leaderboard.html">🏆 Leaderboard</a>
+                    <a href="enhanced-session-test.html">⏱️ Sessions</a>
+                    <a href="manual-payment.html">💰 Payment</a>
+                    <a href="modern-admin-panel.html">⚙️ Admin</a>
+                    <a href="#" onclick="logout()">🚪 Logout</a>
+                `;
+            }
+        });
+        
+        // Logout function
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+</html>

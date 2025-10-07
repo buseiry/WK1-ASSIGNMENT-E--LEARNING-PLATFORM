@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #status {
+      font-size: 18px;
+      margin: 20px 0;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-functions-compat.js"></script>
+  <script src="./firebase-config.js"></script>
+
+    const auth = window.firebaseAuth;
+    const functions = window.firebaseFunctions;
+
+    async function verifyPayment() {
+      const params = new URLSearchParams(window.location.search);
+      const reference = params.get("reference");
+
+      if (!reference) {
+        document.getElementById("status").textContent = "No payment reference found.";
+        return;
+      }
+
+      document.getElementById("status").textContent = "Verifying payment...";
+
+      firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user) {
+          document.getElementById("status").textContent = "You must be logged in.";
+          return;
+        }
+
+        try {
+          const verifyPayment = functions.httpsCallable("verifyPaymentV2");
+          const result = await verifyPayment({ reference });
+
+          if (result.data.success) {
+            document.getElementById("status").textContent = "✅ Payment verified successfully!";
+            setTimeout(() => {
+              window.location.href = "/dashboard.html"; // Change to your dashboard page
+            }, 2000);
+          } else {
+            document.getElementById("status").textContent = "❌ Payment verification failed.";
+          }
+        } catch (error) {
+          console.error(error);
+          document.getElementById("status").textContent = "Error verifying payment. Try again.";
+        }
+      });
+    }
+
+    window.onload = verifyPayment;
+  </script>
+</head>
+<body>
+  <h1>Payment Verification</h1>
+  <p id="status">Loading...</p>
+</body>
+</html>

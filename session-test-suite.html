@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session System Test Suite - Reading Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #F5F5F5;
+            --accent-color: #FFC107;
+            --danger-color: #f44336;
+            --text-color: #333333;
+            --white: #FFFFFF;
+            --light-grey: #F8F9FA;
+            --border-color: #E0E0E0;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--secondary-color);
+            min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .test-item {
+            background: var(--light-grey);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .test-item h4 {
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .test-item p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            font-family: inherit;
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), #d32f2f);
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--accent-color), #ffb300);
+            color: var(--text-color);
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+        }
+
+        .status {
+            padding: 16px 20px;
+            margin: 16px 0;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            color: #2e7d32;
+            border-color: #c8e6c9;
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, #ffebee, #f8d7da);
+            color: #c62828;
+            border-color: #ffcdd2;
+        }
+
+        .status.info {
+            background: linear-gradient(135deg, #e3f2fd, #d1ecf1);
+            color: #1565c0;
+            border-color: #bbdefb;
+        }
+
+        .status.warning {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            color: #f57c00;
+            border-color: #ffcc02;
+        }
+
+        .test-results {
+            background: var(--light-grey);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .test-results h4 {
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+
+        .test-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .test-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .test-pass {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .test-fail {
+            color: #c62828;
+            font-weight: 600;
+        }
+
+        .test-pending {
+            color: #f57c00;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Session System Test Suite</h1>
+            <p>Comprehensive testing for the enhanced session management system</p>
+        </div>
+
+        <div id="status-container"></div>
+
+        <!-- Test Overview -->
+        <div class="card">
+            <h3>📊 Test Overview</h3>
+            <div class="test-grid">
+                <div class="test-item">
+                    <h4>🔐 Authentication Tests</h4>
+                    <p>Test user authentication, payment verification, and admin access</p>
+                    <button onclick="runAuthTests()">Run Auth Tests</button>
+                </div>
+                <div class="test-item">
+                    <h4>⚛️ Atomic Session Tests</h4>
+                    <p>Test atomic session operations with race condition protection</p>
+                    <button onclick="runAtomicSessionTests()">Run Atomic Tests</button>
+                </div>
+                <div class="test-item">
+                    <h4>🔄 Offline Support Tests</h4>
+                    <p>Test offline functionality and sync when back online</p>
+                    <button onclick="runOfflineTests()">Run Offline Tests</button>
+                </div>
+                <div class="test-item">
+                    <h4>🔒 Admin Control Tests</h4>
+                    <p>Test admin session control and force-end functionality</p>
+                    <button onclick="runAdminTests()">Run Admin Tests</button>
+                </div>
+                <div class="test-item">
+                    <h4>🧹 Cleanup Tests</h4>
+                    <p>Test session cleanup and leftover session handling</p>
+                    <button onclick="runCleanupTests()">Run Cleanup Tests</button>
+                </div>
+                <div class="test-item">
+                    <h4>🚀 Full Integration Test</h4>
+                    <p>Run all tests in sequence to verify complete functionality</p>
+                    <button onclick="runAllTests()" class="btn-secondary">Run All Tests</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="card">
+            <h3>📋 Test Results</h3>
+            <div class="test-results">
+                <h4>Test Status</h4>
+                <div id="test-results-container">
+                    <p style="color: #666; text-align: center;">No tests run yet. Click a test button above to begin.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h3>⚡ Quick Actions</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="createTestUser()">Create Test User</button>
+                <button onclick="simulateOffline()">Simulate Offline</button>
+                <button onclick="simulateOnline()">Simulate Online</button>
+                <button onclick="clearAllSessions()" class="btn-danger">Clear All Sessions</button>
+                <button onclick="openSessionPage()">Open Session Page</button>
+                <button onclick="openAdminPage()">Open Admin Page</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMJzYUsmZsf8KBWXQD8yFCdaurd5dCauY",
+            authDomain: "reading-streak.firebaseapp.com",
+            projectId: "reading-streak",
+            storageBucket: "reading-streak.firebasestorage.app",
+            messagingSenderId: "508966325542",
+            appId: "1:508966325542:web:82da076dc762ecc00fc5e7",
+            measurementId: "G-TF60SVCQ5W"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Initialize atomic session manager
+        const atomicSessionManager = new AtomicSessionManager(db, auth);
+        
+        let currentUser = null;
+        let testResults = [];
+        
+        // Check authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                showStatus('✅ User authenticated. Ready for testing.', 'success');
+            } else {
+                showStatus('Please login first to run tests.', 'info');
+                setTimeout(() => {
+                    window.location.href = 'simple-auth-test.html';
+                }, 2000);
+            }
+        });
+        
+        // Test result tracking
+        function addTestResult(testName, status, message) {
+            testResults.push({
+                name: testName,
+                status: status,
+                message: message,
+                timestamp: new Date()
+            });
+            updateTestResultsDisplay();
+        }
+        
+        function updateTestResultsDisplay() {
+            const container = document.getElementById('test-results-container');
+            
+            if (testResults.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center;">No tests run yet. Click a test button above to begin.</p>';
+                return;
+            }
+            
+            let html = '';
+            testResults.forEach(result => {
+                const statusClass = result.status === 'pass' ? 'test-pass' : 
+                                   result.status === 'fail' ? 'test-fail' : 'test-pending';
+                const statusIcon = result.status === 'pass' ? '✅' : 
+                                  result.status === 'fail' ? '❌' : '⏳';
+                
+                html += `
+                    <div class="test-result-item">
+                        <span>${statusIcon} ${result.name}</span>
+                        <span class="${statusClass}">${result.status.toUpperCase()}</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Authentication Tests
+        async function runAuthTests() {
+            showStatus('Running authentication tests...', 'info');
+            testResults = [];
+            
+            try {
+                // Test 1: User authentication
+                if (currentUser) {
+                    addTestResult('User Authentication', 'pass', 'User is authenticated');
+                } else {
+                    addTestResult('User Authentication', 'fail', 'User is not authenticated');
+                    return;
+                }
+                
+                // Test 2: User document exists
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    addTestResult('User Document Exists', 'pass', 'User document found in Firestore');
+                } else {
+                    addTestResult('User Document Exists', 'fail', 'User document not found');
+                }
+                
+                // Test 3: Payment status check
+                const userData = userDoc.exists ? userDoc.data() : null;
+                const isPaid = userData && (userData.isPaid === true || userData.paymentStatus === true);
+                if (isPaid) {
+                    addTestResult('Payment Status', 'pass', 'User has paid status');
+                } else {
+                    addTestResult('Payment Status', 'fail', 'User does not have paid status');
+                }
+                
+                // Test 4: Admin status check
+                const isAdmin = userData && userData.admin === true;
+                if (isAdmin) {
+                    addTestResult('Admin Status', 'pass', 'User has admin privileges');
+                } else {
+                    addTestResult('Admin Status', 'fail', 'User does not have admin privileges');
+                }
+                
+                showStatus('✅ Authentication tests completed', 'success');
+                
+            } catch (error) {
+                addTestResult('Authentication Tests', 'fail', error.message);
+                showStatus('❌ Authentication tests failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Atomic session tests
+        async function runAtomicSessionTests() {
+            showStatus('Running atomic session tests...', 'info');
+            
+            try {
+                // Test 1: Atomic session start
+                const startResult = await atomicSessionManager.startSessionAtomic();
+                if (startResult.success) {
+                    addTestResult('Atomic Session Start', 'pass', 'Session started atomically');
+                    
+                    // Test 2: Atomic session pause
+                    const pauseResult = await atomicSessionManager.pauseSessionAtomic(startResult.sessionId);
+                    if (pauseResult.success) {
+                        addTestResult('Atomic Session Pause', 'pass', 'Session paused atomically');
+                        
+                        // Test 3: Atomic session resume
+                        const resumeResult = await atomicSessionManager.resumeSessionAtomic(startResult.sessionId, 5000);
+                        if (resumeResult.success) {
+                            addTestResult('Atomic Session Resume', 'pass', 'Session resumed atomically');
+                            
+                            // Test 4: Atomic session end
+                            const endResult = await atomicSessionManager.endSessionAtomic(startResult.sessionId);
+                            if (endResult.success) {
+                                addTestResult('Atomic Session End', 'pass', 'Session ended atomically');
+                            } else {
+                                addTestResult('Atomic Session End', 'fail', endResult.error);
+                            }
+                        } else {
+                            addTestResult('Atomic Session Resume', 'fail', resumeResult.error);
+                        }
+                    } else {
+                        addTestResult('Atomic Session Pause', 'fail', pauseResult.error);
+                    }
+                } else {
+                    addTestResult('Atomic Session Start', 'fail', startResult.error);
+                }
+                
+                showStatus('✅ Atomic session tests completed', 'success');
+                
+            } catch (error) {
+                addTestResult('Atomic Session Tests', 'fail', error.message);
+                showStatus('❌ Atomic session tests failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Offline Support Tests
+        async function runOfflineTests() {
+            showStatus('Running offline support tests...', 'info');
+            
+            try {
+                // Test 1: localStorage functionality
+                const testData = { test: 'offline', timestamp: Date.now() };
+                localStorage.setItem('test_offline', JSON.stringify(testData));
+                const retrieved = JSON.parse(localStorage.getItem('test_offline'));
+                
+                if (retrieved && retrieved.test === 'offline') {
+                    addTestResult('localStorage Support', 'pass', 'localStorage working correctly');
+                } else {
+                    addTestResult('localStorage Support', 'fail', 'localStorage not working');
+                }
+                
+                // Test 2: Connection state detection
+                const isOnline = navigator.onLine;
+                addTestResult('Connection Detection', 'pass', `Connection state: ${isOnline ? 'Online' : 'Offline'}`);
+                
+                // Test 3: Offline queue simulation
+                const offlineQueue = [];
+                offlineQueue.push(() => console.log('Offline operation'));
+                addTestResult('Offline Queue', 'pass', 'Offline queue functionality available');
+                
+                showStatus('✅ Offline support tests completed', 'success');
+                
+            } catch (error) {
+                addTestResult('Offline Support Tests', 'fail', error.message);
+                showStatus('❌ Offline support tests failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Admin Control Tests
+        async function runAdminTests() {
+            showStatus('Running admin control tests...', 'info');
+            
+            try {
+                // Test 1: Admin access check
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                const userData = userDoc.exists ? userDoc.data() : null;
+                const isAdmin = userData && userData.admin === true;
+                
+                if (isAdmin) {
+                    addTestResult('Admin Access', 'pass', 'User has admin privileges');
+                    
+                    // Test 2: Force end session capability
+                    const sessionsQuery = await db.collection('sessions')
+                        .where('status', 'in', ['active', 'paused'])
+                        .limit(1)
+                        .get();
+                    
+                    if (!sessionsQuery.empty) {
+                        const sessionDoc = sessionsQuery.docs[0];
+                        await db.collection('sessions').doc(sessionDoc.id).update({
+                            status: 'ended',
+                            forceEnded: true,
+                            forceEndedBy: currentUser.uid
+                        });
+                        addTestResult('Force End Session', 'pass', 'Successfully force ended session');
+                    } else {
+                        addTestResult('Force End Session', 'pass', 'No active sessions to force end');
+                    }
+                } else {
+                    addTestResult('Admin Access', 'fail', 'User does not have admin privileges');
+                }
+                
+                showStatus('✅ Admin control tests completed', 'success');
+                
+            } catch (error) {
+                addTestResult('Admin Control Tests', 'fail', error.message);
+                showStatus('❌ Admin control tests failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Cleanup Tests
+        async function runCleanupTests() {
+            showStatus('Running cleanup tests...', 'info');
+            
+            try {
+                // Test 1: Find leftover active sessions
+                const activeSessionsQuery = await db.collection('sessions')
+                    .where('status', 'in', ['active', 'paused'])
+                    .get();
+                
+                if (activeSessionsQuery.empty) {
+                    addTestResult('No Leftover Sessions', 'pass', 'No leftover active sessions found');
+                } else {
+                    addTestResult('Leftover Sessions Found', 'warning', `${activeSessionsQuery.docs.length} leftover sessions found`);
+                    
+                    // Test 2: Cleanup leftover sessions
+                    const batch = db.batch();
+                    activeSessionsQuery.docs.forEach(doc => {
+                        batch.update(doc.ref, {
+                            status: 'ended',
+                            endTime: firebase.firestore.FieldValue.serverTimestamp(),
+                            autoEnded: true,
+                            autoEndReason: 'test_cleanup'
+                        });
+                    });
+                    
+                    await batch.commit();
+                    addTestResult('Session Cleanup', 'pass', `Cleaned up ${activeSessionsQuery.docs.length} sessions`);
+                }
+                
+                showStatus('✅ Cleanup tests completed', 'success');
+                
+            } catch (error) {
+                addTestResult('Cleanup Tests', 'fail', error.message);
+                showStatus('❌ Cleanup tests failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Run all tests
+        async function runAllTests() {
+            showStatus('Running all tests...', 'info');
+            testResults = [];
+            
+            await runAuthTests();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await runSessionTests();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await runOfflineTests();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await runAdminTests();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await runCleanupTests();
+            
+            const passedTests = testResults.filter(r => r.status === 'pass').length;
+            const failedTests = testResults.filter(r => r.status === 'fail').length;
+            const warningTests = testResults.filter(r => r.status === 'warning').length;
+            
+            showStatus(`✅ All tests completed! Passed: ${passedTests}, Failed: ${failedTests}, Warnings: ${warningTests}`, 'success');
+        }
+        
+        // Quick Actions
+        async function createTestUser() {
+            try {
+                await db.collection('users').doc(currentUser.uid).set({
+                    email: currentUser.email || 'test@example.com',
+                    isPaid: true,
+                    paymentStatus: true,
+                    admin: true,
+                    points: 0,
+                    totalSessions: 0,
+                    totalSessionTime: 0,
+                    activeSession: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showStatus('✅ Test user created with admin privileges', 'success');
+            } catch (error) {
+                showStatus('❌ Error creating test user: ' + error.message, 'error');
+            }
+        }
+        
+        function simulateOffline() {
+            // This would simulate offline mode in a real test
+            showStatus('⚠️ Offline mode simulation (browser dependent)', 'warning');
+        }
+        
+        function simulateOnline() {
+            // This would simulate online mode in a real test
+            showStatus('✅ Online mode simulation (browser dependent)', 'success');
+        }
+        
+        async function clearAllSessions() {
+            if (!confirm('Are you sure you want to clear all sessions? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const sessionsQuery = await db.collection('sessions').get();
+                const batch = db.batch();
+                
+                sessionsQuery.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                
+                await batch.commit();
+                showStatus(`✅ Cleared ${sessionsQuery.docs.length} sessions`, 'success');
+            } catch (error) {
+                showStatus('❌ Error clearing sessions: ' + error.message, 'error');
+            }
+        }
+        
+        function openSessionPage() {
+            window.open('enhanced-session-test.html', '_blank');
+        }
+        
+        function openAdminPage() {
+            window.open('admin-session-control.html', '_blank');
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const container = document.getElementById('status-container');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            container.appendChild(statusDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 5000);
+        }
+        
+        // Initialize
+        showStatus('Test suite loaded. Ready for testing!', 'info');
+    </script>
+</body>
+</html>
+

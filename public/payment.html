@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paystack Live Payment</title>
+  <link rel="stylesheet" href="./styles/output.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 24px; max-width: 600px; margin: 0 auto; }
+    h1 { margin-bottom: 16px; font-size: 22px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+    .row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .row .field { flex: 1; display: flex; flex-direction: column; }
+    label { font-size: 13px; color: #374151; margin-bottom: 6px; }
+    input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+    button { background: #10b981; color: #fff; border: 0; border-radius: 6px; padding: 10px 14px; font-size: 14px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    #status { margin-top: 12px; font-size: 14px; color: #111827; }
+    .muted { color: #6b7280; font-size: 12px; }
+    .error { color: #b91c1c; }
+    .success { color: #065f46; }
+  </style>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+<script src="./layout.js"></script>
+<script src="./layout.js"></script>
+
+<h1>Pay with Paystack</h1>
+<div class="card bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+  <div class="row">
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" required />
+    </div>
+    <div class="field">
+      <label for="amount">Amount (NGN)</label>
+      <input id="amount" type="number" min="1" step="1" placeholder="500" required />
+      <div class="muted">We'll convert to kobo automatically.</div>
+    </div>
+  </div>
+  <button id="payBtn">Pay Now</button>
+  <div style="margin-top:12px">
+    <button id="simulatePay" style="background:#4f46e5">Simulate Pay ₦500 (Test)</button>
+  </div>
+  <div id="status" class="muted">Enter your email and amount, then click Pay Now.</div>
+</div>
+
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<!-- Firebase SDK and config (required for auth guard) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script src="./firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-functions-compat.js"></script>
+<!-- Load public key from config -->
+<script src="paystack-config.js"></script>
+
+<script>
+  const PAYSTACK_PUBLIC_KEY = window.PAYSTACK_PUBLIC_KEY || '';
+  const FUNCTIONS_BASE = window.FUNCTIONS_BASE || 'https://us-central1-reading-streak.cloudfunctions.net';
+  const statusEl = document.getElementById('status');
+  // Auth guard: require login
+  (function requireAuth(){
+    const auth = window.firebaseAuth;
+    auth.onAuthStateChanged((user)=>{
+      if(!user){
+        setStatus('Please login to make payment. Redirecting...', 'error');
+        setTimeout(()=>{ window.location.href = '/'; }, 1200);
+      } else {
+        document.getElementById('email').value = user.email || '';
+        document.getElementById('email').readOnly = true;
+      }
+    });
+  })();
+
+  // If already paid, skip to dashboard
+  (async function redirectIfPaid(){
+    try {
+      const db = window.firebaseDb;
+      const auth = window.firebaseAuth;
+      auth.onAuthStateChanged(async (u)=>{
+        if(!u) return;
+        const snap = await db.collection('users').doc(u.uid).get();
+        const paid = !!(snap.exists && (snap.data().hasPaid || snap.data().paymentStatus));
+        if(paid){
+          setStatus('Payment already completed. Redirecting to dashboard...', 'success');
+          setTimeout(()=>{ window.location.href = '/dashboard.html'; }, 800);
+        }
+      });
+    } catch {}
+  })();
+  const btn = document.getElementById('payBtn');
+
+  function setStatus(msg, cls) {
+    statusEl.textContent = msg;
+    statusEl.className = cls || '';
+  }
+
+  function handlePaymentCallback(response) {
+    // Defer async logic to a separate function to keep callback synchronous
+    verifyPayment(response.reference).finally(() => {
+      btn.disabled = false;
+    });
+  }
+
+  async function verifyPayment(reference) {
+    const email = document.getElementById('email').value.trim();
+    try {
+      setStatus('Payment successful, verifying...', 'muted');
+      const verifyRes = await fetch(`${FUNCTIONS_BASE}/verifyPayment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference, uid: firebase.auth().currentUser?.uid })
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok || !verifyData?.success) throw new Error(verifyData?.error || 'Verification failed');
+      setStatus('🎉 Payment verified successfully! Welcome to Reading Streak!', 'success');
+      const amount = verifyData.amount; // in kobo
+      
+      // Show success message with countdown
+      let countdown = 3;
+      const countdownInterval = setInterval(() => {
+        setStatus(`🎉 Payment verified successfully! Redirecting to dashboard in ${countdown} seconds...`, 'success');
+        countdown--;
+        if (countdown < 0) {
+          clearInterval(countdownInterval);
+          const url = new URL(window.location.origin + '/dashboard.html');
+          url.searchParams.set('paid', '1');
+          url.searchParams.set('ref', reference);
+          if (typeof amount === 'number') url.searchParams.set('amount', String(amount));
+          window.location.href = url.toString();
+        }
+      }, 1000);
+    } catch (e) {
+      console.error(e);
+      setStatus('Verification failed. Contact support. Keep reference: ' + reference, 'error');
+    }
+  }
+
+  function startPayment() {
+    // Run the async flow without making the click handler itself async
+    (async () => {
+      const email = document.getElementById('email').value.trim();
+      const amount = Number(document.getElementById('amount').value.trim());
+
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        setStatus('Enter a valid email.', 'error');
+        return;
+      }
+      if (!amount || amount <= 0) {
+        setStatus('Enter a valid amount in NGN.', 'error');
+        return;
+      }
+
+      if (!PAYSTACK_PUBLIC_KEY) {
+        setStatus('Paystack public key is not configured.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      setStatus('Creating payment...', 'muted');
+
+      try {
+        // Create payment reference on your server (Cloud Functions)
+        const createRes = await fetch(`${FUNCTIONS_BASE}/createPayment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, amount, uid: firebase.auth().currentUser?.uid })
+        });
+
+        const createData = await createRes.json();
+        if (!createRes.ok || !createData?.success) throw new Error(createData?.error || 'Create payment failed');
+
+        const { reference } = createData;
+        setStatus('Opening Paystack payment window...', 'muted');
+
+        const handler = PaystackPop.setup({
+          key: PAYSTACK_PUBLIC_KEY,
+          email: email,
+          amount: Math.round(amount * 100),
+          ref: reference,
+          callback: handlePaymentCallback,
+          onClose: function() {
+            setStatus('Payment window closed.', 'muted');
+            btn.disabled = false;
+          }
+        });
+
+        handler.openIframe();
+
+      } catch (err) {
+        console.error(err);
+        setStatus(err.message || 'Something went wrong.', 'error');
+        btn.disabled = false;
+      }
+    })();
+  }
+
+  document.getElementById('payBtn').addEventListener('click', startPayment);
+  document.getElementById('simulatePay').addEventListener('click', async ()=>{
+    try {
+      const u = window.firebaseAuth.currentUser;
+      if (!u) { setStatus('Please login first.', 'error'); return; }
+      await window.firebaseDb.collection('users').doc(u.uid).set({ paymentStatus: 'paid', hasPaid: true }, { merge: true });
+      setStatus('✅ Payment status updated. You can start sessions now.', 'success');
+      // Inform dashboard without reload
+      try { localStorage.setItem('paymentStatus', 'paid'); } catch(_) {}
+    } catch (e) {
+      setStatus('Failed to update payment status', 'error');
+    }
+  });
+</script>
+
+</body>
+</html>

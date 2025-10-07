@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Session Test - Reading Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #F5F5F5;
+            --accent-color: #FFC107;
+            --text-color: #333333;
+            --white: #FFFFFF;
+            --light-grey: #F8F9FA;
+            --border-color: #E0E0E0;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--secondary-color);
+            min-height: 100vh;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            background: var(--white);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: var(--light-grey);
+            color: var(--primary-color);
+        }
+
+        .payment-status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .payment-status-badge.paid {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .payment-status-badge.unpaid {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ffe0b2;
+        }
+
+        /* Payment Notice */
+        .pay-notice {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border: 2px solid #ff9800;
+            border-radius: 16px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .pay-notice h3 {
+            color: #f57c00;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .pay-notice p {
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .pay-goto-btn {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .pay-goto-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+        }
+
+        /* Floating Session Timer */
+        .session-timer {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--white);
+            border-radius: 16px;
+            padding: 16px 24px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--primary-color);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+        }
+
+        .session-timer.active {
+            display: flex;
+        }
+
+        /* Persistent Timer Header */
+        .persistent-timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--white);
+            border-radius: 16px;
+            padding: 16px 24px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--primary-color);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+        }
+
+        .persistent-timer.active {
+            display: flex;
+        }
+
+        .timer-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .timer-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        .session-status {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .main-content {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .sidebar {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            position: sticky;
+            top: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .session-card {
+            border-left: 4px solid var(--primary-color);
+            background: linear-gradient(135deg, #f1f8e9 0%, var(--white) 100%);
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #e8f5e8 0%, var(--white) 100%);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .controls-card {
+            background: linear-gradient(135deg, #fff8e1 0%, var(--white) 100%);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        /* Status Messages */
+        .status {
+            padding: 16px 20px;
+            margin: 16px 0;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            color: #2e7d32;
+            border-color: #c8e6c9;
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, #ffebee, #f8d7da);
+            color: #c62828;
+            border-color: #ffcdd2;
+        }
+
+        .status.info {
+            background: linear-gradient(135deg, #e3f2fd, #d1ecf1);
+            color: #1565c0;
+            border-color: #bbdefb;
+        }
+
+        .status.warning {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            color: #f57c00;
+            border-color: #ffcc02;
+        }
+
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--primary-color);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .connection-status.online {
+            border-color: var(--primary-color);
+            color: #2e7d32;
+        }
+
+        .connection-status.offline {
+            border-color: var(--danger-color);
+            color: #c62828;
+        }
+
+        .connection-status.show {
+            display: flex;
+        }
+
+        /* Timer */
+        .timer {
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 30px 0;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        /* Session Info */
+        .session-info {
+            background: var(--light-grey);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .session-info h4 {
+            color: var(--text-color);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .session-info p {
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .session-info strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .session-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            flex: 1;
+            min-width: 140px;
+            font-family: inherit;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--accent-color), #ffb300);
+            color: var(--text-color);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+        }
+
+        /* User Info */
+        .user-info p {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .user-info strong {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        /* Session Stats */
+        .session-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--light-grey);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Leaderboard Preview */
+        .leaderboard-preview {
+            background: var(--light-grey);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .leaderboard-preview h4 {
+            color: var(--text-color);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            font-weight: 700;
+            color: var(--primary-color);
+            min-width: 30px;
+            font-size: 1.1rem;
+        }
+
+        .name {
+            flex: 1;
+            margin: 0 10px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .points {
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 1.1rem;
+        }
+
+        /* Persistence Indicator */
+        .persistence-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 15px;
+            }
+
+            .main-content {
+                padding: 25px;
+            }
+
+            .sidebar {
+                position: static;
+                padding: 20px;
+            }
+
+            .session-controls {
+                flex-direction: column;
+            }
+
+            button {
+                flex: none;
+                min-width: auto;
+            }
+
+            .timer {
+                font-size: 2.8rem;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .persistent-timer {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .timer {
+                font-size: 2.2rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .session-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-logo">📚 Reading Streak</div>
+            <div class="nav-links">
+                <a href="leaderboard.html">🏆 Leaderboard</a>
+                <a href="enhanced-session-test.html">⏱️ Sessions</a>
+                <a href="simple-auth-test.html">🔐 Auth</a>
+                <a href="manual-payment.html">💰 Payment</a>
+                <a href="modern-admin-panel.html">⚙️ Admin</a>
+                <span id="nav-payment-status" class="payment-status-badge unpaid">Not Paid</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Floating Session Timer -->
+    <div class="session-timer" id="sessionTimer">
+        <div class="timer-icon">⏱️</div>
+        <div>
+            <div class="timer-display" id="session-timer-display">00:00:00</div>
+            <div class="session-status" id="session-status-text">Session Active</div>
+        </div>
+    </div>
+
+    <!-- Persistent Timer Header -->
+    <div class="persistent-timer" id="persistent-timer">
+        <div class="timer-icon">⏱️</div>
+        <div>
+            <div class="timer-display" id="persistent-timer-display">00:00:00</div>
+            <div class="session-status" id="session-status">Session Active</div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status" id="connection-status">
+        <span id="connection-icon">🌐</span>
+        <span id="connection-text">Online</span>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>📚 Enhanced Session Manager</h1>
+                <p>Advanced reading session tracking with persistent timers</p>
+            </div>
+
+            <div id="status-container"></div>
+
+            <div class="card user-info" id="user-info" style="display: none;">
+                <h3>👤 User Information</h3>
+                <p><strong>User ID:</strong> <span id="user-id"></span></p>
+                <p><strong>Email:</strong> <span id="user-email"></span></p>
+                <p><strong>Payment Status:</strong> <span id="payment-status"></span></p>
+                <div class="session-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-sessions">0</div>
+                        <div class="stat-label">Total Sessions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-points">0</div>
+                        <div class="stat-label">Total Points</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-time">0h</div>
+                        <div class="stat-label">Total Time</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Notice -->
+            <div class="pay-notice" id="payNotice" style="display: none;">
+                <h3>💰 Payment Required</h3>
+                <p>You must pay ₦500 to activate sessions. Pay to Ecobank 4890010148 or OPay 9164392514. After payment, submit your reference on the Payment page.</p>
+                <button class="pay-goto-btn" id="payGotoBtn" onclick="window.location.href='manual-payment.html'">Go to Payment Page</button>
+            </div>
+
+            <div class="card session-card">
+                <h3>🎯 Session Management <span class="persistence-indicator" id="persistence-indicator" style="display: none;">💾 Persistent</span></h3>
+                <div id="session-info">
+                    <p>No active session. Click "Start Session" to begin.</p>
+                </div>
+                
+                <div class="timer" id="timer" style="display: none;">
+                    00:00:00
+                </div>
+
+                <div class="session-controls">
+                    <button id="start-session-btn" onclick="startSessionAtomic()">
+                        <span id="start-btn-text">Start Session</span>
+                    </button>
+                    <button id="pauseBtn" onclick="pauseSessionAtomic()" style="display: none;" class="btn-secondary">
+                        <span id="pause-btn-text">⏸️ Pause</span>
+                    </button>
+                    <button id="resumeBtn" onclick="resumeSessionAtomic()" style="display: none;" class="btn-success">
+                        <span id="resume-btn-text">▶️ Resume</span>
+                    </button>
+                    <button id="endBtn" onclick="endSessionAtomic()" style="display: none;" class="btn-danger">
+                        <span id="end-btn-text">⏹️ End Session</span>
+                    </button>
+                    <button id="verify-session-btn" onclick="verifySession()" style="display: none;" class="btn-secondary">
+                        Verify Session
+                    </button>
+                </div>
+            </div>
+
+            <div class="card controls-card">
+                <h3>🔧 Test Functions</h3>
+                <div class="session-controls">
+                    <button onclick="testCloudFunction()" class="btn-secondary">Test Cloud Function</button>
+                    <button onclick="checkPaymentStatus()" class="btn-secondary">Check Payment Status</button>
+                    <button onclick="createTestUser()" class="btn-secondary">Create Test User</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="leaderboard-preview">
+                <h4>🏆 Leaderboard Preview</h4>
+                <div id="leaderboard-content">
+                    <p style="color: #666; text-align: center;">Loading...</p>
+                </div>
+                <button onclick="openFullLeaderboard()" style="width: 100%; margin-top: 15px; font-size: 0.9rem;">
+                    View Full Leaderboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-functions-compat.js"></script>
+    
+    <!-- Atomic Session Manager -->
+    <script src="atomic-session-manager.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMJzYUsmZsf8KBWXQD8yFCdaurd5dCauY",
+            authDomain: "reading-streak.firebaseapp.com",
+            projectId: "reading-streak",
+            storageBucket: "reading-streak.firebasestorage.app",
+            messagingSenderId: "508966325542",
+            appId: "1:508966325542:web:82da076dc762ecc00fc5e7",
+            measurementId: "G-TF60SVCQ5W"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const functions = firebase.functions();
+        
+        // Initialize atomic session manager
+        const atomicSessionManager = new AtomicSessionManager(db, auth);
+        
+        let currentUser = null;
+        let currentSession = null;
+        let sessionTimer = null;
+        let sessionStartTime = null;
+        let sessionListener = null;
+        let userStatsListener = null;
+        let leaderboardListener = null;
+        
+        // Timer persistence functions
+        function saveTimerState() {
+            if (currentSession && sessionStartTime) {
+                localStorage.setItem('sessionData', JSON.stringify({
+                    sessionId: currentSession.id,
+                    startTime: sessionStartTime.toISOString(),
+                    userId: currentUser?.uid
+                }));
+            }
+        }
+
+        function loadTimerState() {
+            try {
+                const sessionData = localStorage.getItem('sessionData');
+                if (sessionData && currentUser) {
+                    const data = JSON.parse(sessionData);
+                    if (data.userId === currentUser.uid) {
+                        sessionStartTime = new Date(data.startTime);
+                        showPersistentTimer();
+                        startTimer();
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading timer state:', error);
+            }
+            return false;
+        }
+
+        function clearTimerState() {
+            localStorage.removeItem('sessionData');
+            localStorage.removeItem('rs_sessionId');
+            localStorage.removeItem('rs_pausedAccum');
+            localStorage.removeItem('rs_pauseStart');
+            hidePersistentTimer();
+            document.getElementById('sessionTimer').classList.remove('active');
+        }
+
+        function showPersistentTimer() {
+            document.getElementById('persistent-timer').classList.add('active');
+        }
+
+        function hidePersistentTimer() {
+            document.getElementById('persistent-timer').classList.remove('active');
+        }
+
+        function updatePersistentTimer() {
+            if (sessionStartTime) {
+                const now = new Date();
+                const pausedAccum = parseInt(localStorage.getItem('rs_pausedAccum') || '0');
+                const pauseStart = localStorage.getItem('rs_pauseStart');
+                
+                let totalPaused = pausedAccum;
+                
+                // Add current pause time if session is currently paused
+                if (pauseStart) {
+                    totalPaused += now.getTime() - parseInt(pauseStart);
+                }
+                
+                const diff = now - sessionStartTime - totalPaused;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Update both timers
+                const timerElement = document.getElementById('timer');
+                const persistentTimerDisplay = document.getElementById('persistent-timer-display');
+                const sessionTimerDisplay = document.getElementById('session-timer-display');
+                
+                if (timerElement) timerElement.textContent = timeString;
+                if (persistentTimerDisplay) persistentTimerDisplay.textContent = timeString;
+                if (sessionTimerDisplay) sessionTimerDisplay.textContent = timeString;
+            }
+        }
+        
+        // Check authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                showUserInfo(user);
+                
+                // Check payment status first
+                const isPaid = await checkPaymentStatus();
+                
+                // Try to restore timer state first
+                if (!loadTimerState()) {
+                    loadPersistentSession();
+                }
+                
+                loadUserStats();
+                loadLeaderboard();
+            } else {
+                showStatus('Please login first.', 'info');
+                setTimeout(() => {
+                    window.location.href = 'simple-auth-test.html';
+                }, 2000);
+            }
+        });
+        
+        // Load persistent session from Firestore
+        async function loadPersistentSession() {
+            try {
+                if (!currentUser) return;
+
+                // Check localStorage first
+                const sessionId = localStorage.getItem('rs_sessionId');
+                const pausedAccum = localStorage.getItem('rs_pausedAccum');
+                const pauseStart = localStorage.getItem('rs_pauseStart');
+
+                if (sessionId) {
+                    // Try to load the session from Firestore
+                    const sessionDoc = await db.collection('sessions').doc(sessionId).get();
+                    
+                    if (sessionDoc.exists) {
+                        const sessionData = sessionDoc.data();
+                        
+                        // Check if session is still active or paused
+                        if ((sessionData.status === 'active' || sessionData.status === 'paused') && sessionData.startTime) {
+                            currentSession = {
+                                id: sessionDoc.id,
+                                ...sessionData
+                            };
+                            
+                            sessionStartTime = sessionData.startTime.toDate();
+                            
+                            // Restore localStorage values
+                            if (pausedAccum) {
+                                localStorage.setItem('rs_pausedAccum', pausedAccum);
+                            }
+                            if (pauseStart && sessionData.status === 'paused') {
+                                localStorage.setItem('rs_pauseStart', pauseStart);
+                            }
+                            
+                            updateSessionUI();
+                            startTimer();
+                            showPersistenceIndicator();
+                            showPersistentTimer();
+                            saveTimerState();
+                            showStatus('✅ Session restored from localStorage!', 'success');
+                            
+                            return;
+                        } else {
+                            // Session completed, clear localStorage
+                            localStorage.removeItem('rs_sessionId');
+                            localStorage.removeItem('rs_pausedAccum');
+                            localStorage.removeItem('rs_pauseStart');
+                        }
+                    }
+                }
+
+                // Listen for active sessions
+                sessionListener = db.collection('sessions')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', 'in', ['active', 'paused'])
+                    .limit(1)
+                    .onSnapshot((snapshot) => {
+                        if (!snapshot.empty) {
+                            const sessionDoc = snapshot.docs[0];
+                            const sessionData = sessionDoc.data();
+                            
+                            currentSession = {
+                                id: sessionDoc.id,
+                                ...sessionData
+                            };
+                            
+                            if (currentSession.startTime) {
+                                sessionStartTime = currentSession.startTime.toDate();
+                                
+                                // Save to localStorage
+                                localStorage.setItem('rs_sessionId', sessionDoc.id);
+                                if (sessionData.pausedAccumMillis) {
+                                    localStorage.setItem('rs_pausedAccum', sessionData.pausedAccumMillis.toString());
+                                }
+                                if (sessionData.status === 'paused' && sessionData.lastPausedAt) {
+                                    localStorage.setItem('rs_pauseStart', Date.now().toString());
+                                }
+                                
+                                updateSessionUI();
+                                startTimer();
+                                showPersistenceIndicator();
+                                showPersistentTimer();
+                                saveTimerState();
+                                showStatus('✅ Session restored from Firestore!', 'success');
+                            }
+                        } else {
+                            // No active session
+                            currentSession = null;
+                            sessionStartTime = null;
+                            if (sessionTimer) {
+                                clearInterval(sessionTimer);
+                                sessionTimer = null;
+                            }
+                            updateSessionUI();
+                            hidePersistenceIndicator();
+                            clearTimerState();
+                        }
+                    }, (error) => {
+                        console.error('Error listening to sessions:', error);
+                    });
+                    
+            } catch (error) {
+                console.error('Error loading persistent session:', error);
+            }
+        }
+        
+        // Show persistence indicator
+        function showPersistenceIndicator() {
+            document.getElementById('persistence-indicator').style.display = 'inline-flex';
+        }
+        
+        // Hide persistence indicator
+        function hidePersistenceIndicator() {
+            document.getElementById('persistence-indicator').style.display = 'none';
+        }
+        
+        // Load user statistics
+        function loadUserStats() {
+            if (!currentUser) return;
+
+            userStatsListener = db.collection('users').doc(currentUser.uid)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        document.getElementById('total-sessions').textContent = userData.totalSessions || 0;
+                        document.getElementById('total-points').textContent = userData.points || 0;
+                        document.getElementById('total-time').textContent = formatTime(userData.totalSessionTime || 0);
+                    }
+                });
+        }
+        
+        // Load leaderboard preview
+        function loadLeaderboard() {
+            leaderboardListener = db.collection('users')
+                .orderBy('points', 'desc')
+                .limit(5)
+                .onSnapshot((snapshot) => {
+                    const leaderboardContent = document.getElementById('leaderboard-content');
+                    
+                    if (snapshot.empty) {
+                        leaderboardContent.innerHTML = '<p style="color: #666; text-align: center;">No data yet</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    snapshot.docs.forEach((doc, index) => {
+                        const userData = doc.data();
+                        const rank = index + 1;
+                        const name = userData.email ? userData.email.split('@')[0] : 'Anonymous';
+                        const points = userData.points || 0;
+                        
+                        html += `
+                            <div class="leaderboard-item">
+                                <span class="rank">#${rank}</span>
+                                <span class="name">${name}</span>
+                                <span class="points">${points}pts</span>
+                            </div>
+                        `;
+                    });
+                    
+                    leaderboardContent.innerHTML = html;
+                });
+        }
+        
+        // Format time in hours
+        function formatTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            return `${hours}h`;
+        }
+        
+        // Show user information
+        async function showUserInfo(user) {
+            document.getElementById('user-info').style.display = 'block';
+            document.getElementById('user-id').textContent = user.uid;
+            document.getElementById('user-email').textContent = user.email || 'Anonymous User';
+        }
+        
+        // Atomic session start with race condition protection
+        async function startSessionAtomic() {
+            try {
+                const startBtn = document.getElementById('start-session-btn');
+                const startBtnText = document.getElementById('start-btn-text');
+                
+                startBtn.disabled = true;
+                startBtnText.innerHTML = '<span class="loading-spinner"></span> Starting...';
+                
+                showStatus('Starting session atomically...', 'info');
+                
+                // Use atomic session manager
+                const result = await atomicSessionManager.startSessionAtomic();
+                
+                if (result.success) {
+                    currentSession = {
+                        id: result.sessionId,
+                        ...result.sessionData
+                    };
+                    
+                    // Set start time for timer
+                    sessionStartTime = new Date();
+                    
+                    // Save to localStorage for persistence
+                    localStorage.setItem('rs_sessionId', result.sessionId);
+                    localStorage.setItem('rs_pausedAccum', '0');
+                    localStorage.removeItem('rs_pauseStart');
+                        
+                    showStatus('✅ Session started atomically! Race-free and persistent.', 'success');
+                    updateSessionUI();
+                    startTimer();
+                    showPersistenceIndicator();
+                    showPersistentTimer();
+                    saveTimerState();
+                } else {
+                    showStatus('❌ ' + result.error, 'error');
+                }
+                
+                startBtn.disabled = false;
+                startBtnText.textContent = 'Start Session';
+                
+            } catch (error) {
+                console.error('Error starting session atomically:', error);
+                showStatus('❌ Error starting session: ' + error.message, 'error');
+                
+                const startBtn = document.getElementById('start-session-btn');
+                const startBtnText = document.getElementById('start-btn-text');
+                startBtn.disabled = false;
+                startBtnText.textContent = 'Start Session';
+            }
+        }
+        
+        // Clean up any leftover active sessions
+        async function cleanupActiveSessions() {
+            try {
+                // Find sessions with status 'active' or missing endTime
+                const activeSessionsQuery = await db.collection('sessions')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', 'in', ['active', 'paused'])
+                    .get();
+                
+                if (!activeSessionsQuery.empty) {
+                    const batch = db.batch();
+                    
+                    activeSessionsQuery.docs.forEach(doc => {
+                        const sessionData = doc.data();
+                        const now = firebase.firestore.FieldValue.serverTimestamp();
+                        
+                        // Calculate duration if we have start time
+                        let durationMillis = 0;
+                        if (sessionData.startTime) {
+                            const startTime = sessionData.startTime.toDate();
+                            const pausedAccum = sessionData.pausedAccumMillis || 0;
+                            durationMillis = Date.now() - startTime.getTime() - pausedAccum;
+                        }
+                        
+                        batch.update(doc.ref, {
+                            status: 'ended',
+                            endTime: now,
+                            totalTimeMillis: durationMillis,
+                            autoEnded: true,
+                            autoEndReason: 'cleanup_on_start'
+                        });
+                    });
+                    
+                    await batch.commit();
+                    
+                    // Update user's activeSession status
+                    await db.collection('users').doc(currentUser.uid).update({
+                        activeSession: false
+                    });
+                    
+                    console.log(`Cleaned up ${activeSessionsQuery.docs.length} leftover active sessions`);
+                }
+            } catch (error) {
+                console.error('Error cleaning up active sessions:', error);
+            }
+        }
+        
+        // Enhanced error handling and offline support
+        let isOnline = navigator.onLine;
+        let offlineQueue = [];
+        
+        // Monitor connection state
+        window.addEventListener('online', () => {
+            isOnline = true;
+            updateConnectionStatus();
+            showStatus('✅ Connection restored! Syncing offline changes...', 'success');
+            processOfflineQueue();
+        });
+
+        window.addEventListener('offline', () => {
+            isOnline = false;
+            updateConnectionStatus();
+            showStatus('⚠️ You are offline. Changes will be saved when connection is restored.', 'warning');
+        });
+
+        // Update connection status indicator
+        function updateConnectionStatus() {
+            const connectionStatus = document.getElementById('connection-status');
+            const connectionIcon = document.getElementById('connection-icon');
+            const connectionText = document.getElementById('connection-text');
+            
+            if (isOnline) {
+                connectionStatus.className = 'connection-status online show';
+                connectionIcon.textContent = '🌐';
+                connectionText.textContent = 'Online';
+            } else {
+                connectionStatus.className = 'connection-status offline show';
+                connectionIcon.textContent = '📵';
+                connectionText.textContent = 'Offline';
+            }
+            
+            // Hide after 3 seconds if online
+            if (isOnline) {
+                setTimeout(() => {
+                    connectionStatus.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Process offline queue when back online
+        async function processOfflineQueue() {
+            if (offlineQueue.length === 0) return;
+            
+            showStatus(`Syncing ${offlineQueue.length} offline changes...`, 'info');
+            
+            for (const operation of offlineQueue) {
+                try {
+                    await operation();
+                } catch (error) {
+                    console.error('Error processing offline operation:', error);
+                }
+            }
+            
+            offlineQueue = [];
+            showStatus('✅ All offline changes synced successfully!', 'success');
+        }
+
+        // Add operation to offline queue
+        function queueOfflineOperation(operation) {
+            offlineQueue.push(operation);
+            showStatus('Operation queued for when connection is restored', 'info');
+        }
+
+        // Enhanced session start with offline support
+        async function startSessionWithOfflineSupport() {
+            try {
+                const startBtn = document.getElementById('start-session-btn');
+                const startBtnText = document.getElementById('start-btn-text');
+                
+                startBtn.disabled = true;
+                startBtnText.innerHTML = '<span class="loading-spinner"></span> Starting...';
+                
+                showStatus('Starting session...', 'info');
+                
+                // Check if user has paid
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                const userData = userDoc.exists ? userDoc.data() : null;
+                const isPaid = userData && (userData.isPaid === true || userData.paymentStatus === true);
+                
+                if (!isPaid) {
+                    showStatus('Payment required to start sessions. Please make a payment first.', 'error');
+                    startBtn.disabled = false;
+                    startBtnText.textContent = 'Start Session';
+                    return;
+                }
+                
+                // Check for existing active sessions and clean them up
+                await cleanupActiveSessions();
+                
+                // Check if user already has an active session after cleanup
+                const activeSessionQuery = await db.collection('sessions')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', 'in', ['active', 'paused'])
+                    .limit(1)
+                    .get();
+                
+                if (!activeSessionQuery.empty) {
+                    showStatus('You already have an active session. Please end it first.', 'error');
+                    startBtn.disabled = false;
+                    startBtnText.textContent = 'Start Session';
+                    return;
+                }
+                
+                // Create session with proper structure
+                const sessionData = {
+                    userId: currentUser.uid,
+                    startTime: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'active',
+                    pausedAccumMillis: 0,
+                    lastPausedAt: null,
+                    endTime: null,
+                    totalTimeMillis: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                const sessionRef = await db.collection('sessions').add(sessionData);
+                currentSession = {
+                    id: sessionRef.id,
+                    ...sessionData
+                };
+                
+                // Update user's activeSession status
+                await db.collection('users').doc(currentUser.uid).update({
+                    activeSession: true,
+                    lastSessionStart: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Set start time for timer
+                sessionStartTime = new Date();
+                
+                // Save to localStorage for persistence
+                localStorage.setItem('rs_sessionId', sessionRef.id);
+                localStorage.setItem('rs_pausedAccum', '0');
+                localStorage.removeItem('rs_pauseStart');
+                    
+                showStatus('✅ Session started successfully! Timer is persistent across page reloads.', 'success');
+                updateSessionUI();
+                startTimer();
+                showPersistenceIndicator();
+                showPersistentTimer();
+                saveTimerState();
+                
+                startBtn.disabled = false;
+                startBtnText.textContent = 'Start Session';
+                
+            } catch (error) {
+                console.error('Error starting session:', error);
+                
+                if (!isOnline) {
+                    // Queue for offline processing
+                    queueOfflineOperation(() => startSessionWithOfflineSupport());
+                    showStatus('Session start queued for when connection is restored', 'warning');
+                } else {
+                    showStatus('❌ Error starting session: ' + error.message, 'error');
+                }
+                
+                const startBtn = document.getElementById('start-session-btn');
+                const startBtnText = document.getElementById('start-btn-text');
+                startBtn.disabled = false;
+                startBtnText.textContent = 'Start Session';
+            }
+        }
+
+        // Atomic pause session
+        async function pauseSessionAtomic() {
+            try {
+                if (!currentSession) {
+                    showStatus('No active session to pause.', 'error');
+                    return;
+                }
+                
+                // Set local pause start time
+                localStorage.setItem('rs_pauseStart', Date.now().toString());
+                
+                // Use atomic session manager
+                const result = await atomicSessionManager.pauseSessionAtomic(currentSession.id);
+                
+                if (result.success) {
+                    // Stop timer
+                    if (sessionTimer) {
+                        clearInterval(sessionTimer);
+                        sessionTimer = null;
+                    }
+                    
+                    // Update UI
+                    document.getElementById('pauseBtn').style.display = 'none';
+                    document.getElementById('resumeBtn').style.display = 'inline-block';
+                    document.getElementById('session-status-text').textContent = 'Paused';
+                    
+                    showStatus('⏸️ Session paused atomically', 'info');
+                } else {
+                    showStatus('❌ ' + result.error, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error pausing session atomically:', error);
+                showStatus('❌ Error pausing session: ' + error.message, 'error');
+            }
+        }
+        
+        // Atomic resume session
+        async function resumeSessionAtomic() {
+            try {
+                if (!currentSession) {
+                    showStatus('No active session to resume.', 'error');
+                    return;
+                }
+                
+                // Calculate paused interval
+                const pauseStart = localStorage.getItem('rs_pauseStart');
+                if (pauseStart) {
+                    const pausedInterval = Date.now() - parseInt(pauseStart);
+                    
+                    // Use atomic session manager
+                    const result = await atomicSessionManager.resumeSessionAtomic(currentSession.id, pausedInterval);
+                    
+                    if (result.success) {
+                        // Clear local pause keys
+                        localStorage.removeItem('rs_pauseStart');
+                        
+                        // Resume timer
+                        startTimer();
+                        
+                        // Update UI
+                        document.getElementById('pauseBtn').style.display = 'inline-block';
+                        document.getElementById('resumeBtn').style.display = 'none';
+                        document.getElementById('session-status-text').textContent = 'Active';
+                        
+                        showStatus('▶️ Session resumed atomically', 'success');
+                    } else {
+                        showStatus('❌ ' + result.error, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error resuming session atomically:', error);
+                showStatus('❌ Error resuming session: ' + error.message, 'error');
+            }
+        }
+        
+        // Atomic end session
+        async function endSessionAtomic() {
+            try {
+                const endBtn = document.getElementById('endBtn');
+                const endBtnText = document.getElementById('end-btn-text');
+                
+                endBtn.disabled = true;
+                endBtnText.innerHTML = '<span class="loading-spinner"></span> Ending...';
+                
+                showStatus('Ending session atomically...', 'info');
+                
+                if (!currentSession) {
+                    showStatus('No active session to end.', 'error');
+                    endBtn.disabled = false;
+                    endBtnText.textContent = '⏹️ End Session';
+                    return;
+                }
+                
+                // Use atomic session manager
+                const result = await atomicSessionManager.endSessionAtomic(currentSession.id);
+                
+                if (result.success) {
+                    // Clear localStorage
+                    localStorage.removeItem('rs_sessionId');
+                    localStorage.removeItem('rs_pausedAccum');
+                    localStorage.removeItem('rs_pauseStart');
+                    
+                    // Reset session state
+                    currentSession = null;
+                    sessionStartTime = null;
+                    if (sessionTimer) {
+                        clearInterval(sessionTimer);
+                        sessionTimer = null;
+                    }
+                    
+                    // Hide timers
+                    document.getElementById('sessionTimer').classList.remove('active');
+                    hidePersistenceIndicator();
+                    clearTimerState();
+                    
+                    showStatus('✅ Session ended atomically!', 'success');
+                    updateSessionUI();
+                } else {
+                    showStatus('❌ ' + result.error, 'error');
+                }
+                
+                endBtn.disabled = false;
+                endBtnText.textContent = '⏹️ End Session';
+                
+            } catch (error) {
+                console.error('Error ending session atomically:', error);
+                showStatus('❌ Error ending session: ' + error.message, 'error');
+                
+                const endBtn = document.getElementById('endBtn');
+                const endBtnText = document.getElementById('end-btn-text');
+                endBtn.disabled = false;
+                endBtnText.textContent = '⏹️ End Session';
+            }
+        }
+        
+        // Verify session
+        async function verifySession() {
+            try {
+                showStatus('Verifying session...', 'info');
+                
+                if (!currentSession) {
+                    showStatus('No active session to verify.', 'error');
+                    return;
+                }
+                
+                const verifySessionFunction = functions.httpsCallable('verifySession');
+                const result = await verifySessionFunction({
+                    sessionId: currentSession.id
+                });
+                
+                if (result.data.success) {
+                    showStatus('✅ Session verified successfully!', 'success');
+                } else {
+                    showStatus('❌ Session verification failed: ' + result.data.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error verifying session:', error);
+                showStatus('❌ Error verifying session: ' + error.message, 'error');
+            }
+        }
+        
+        // Update session UI
+        function updateSessionUI() {
+            const sessionInfo = document.getElementById('session-info');
+            const startBtn = document.getElementById('start-session-btn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resumeBtn = document.getElementById('resumeBtn');
+            const endBtn = document.getElementById('endBtn');
+            const verifyBtn = document.getElementById('verify-session-btn');
+            const timer = document.getElementById('timer');
+            const sessionTimer = document.getElementById('sessionTimer');
+            
+            if (currentSession) {
+                const isPaused = currentSession.status === 'paused' || localStorage.getItem('rs_pauseStart') !== null;
+                
+                sessionInfo.innerHTML = `
+                    <div class="session-info">
+                        <h4>📚 Active Session</h4>
+                        <p><strong>Session ID:</strong> ${currentSession.id}</p>
+                        <p><strong>Started:</strong> ${sessionStartTime ? sessionStartTime.toLocaleString() : 'Unknown'}</p>
+                        <p><strong>Status:</strong> ${isPaused ? 'Paused' : 'Active'}</p>
+                        <p><strong>Persistent:</strong> Yes - Timer survives page reloads</p>
+                    </div>
+                `;
+                
+                startBtn.style.display = 'none';
+                endBtn.style.display = 'inline-block';
+                verifyBtn.style.display = 'inline-block';
+                timer.style.display = 'block';
+                sessionTimer.classList.add('active');
+                
+                // Show/hide pause/resume buttons based on state
+                if (isPaused) {
+                    pauseBtn.style.display = 'none';
+                    resumeBtn.style.display = 'inline-block';
+                } else {
+                    pauseBtn.style.display = 'inline-block';
+                    resumeBtn.style.display = 'none';
+                }
+            } else {
+                sessionInfo.innerHTML = '<p>No active session. Click "Start Session" to begin.</p>';
+                startBtn.style.display = 'inline-block';
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'none';
+                endBtn.style.display = 'none';
+                verifyBtn.style.display = 'none';
+                timer.style.display = 'none';
+                sessionTimer.classList.remove('active');
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            if (sessionTimer) {
+                clearInterval(sessionTimer);
+            }
+            
+            sessionTimer = setInterval(() => {
+                updatePersistentTimer();
+                saveTimerState();
+            }, 1000);
+        }
+        
+        // Test Cloud Function
+        async function testCloudFunction() {
+            try {
+                showStatus('Testing Cloud Function...', 'info');
+                
+                const testFunction = functions.httpsCallable('startSession');
+                const result = await testFunction({
+                    userId: currentUser.uid
+                });
+                
+                showStatus('✅ Cloud Function test successful!', 'success');
+                console.log('Test result:', result.data);
+                
+            } catch (error) {
+                showStatus('❌ Cloud Function test failed: ' + error.message, 'error');
+                console.error('Cloud Function error:', error);
+            }
+        }
+        
+        // Check payment status
+        async function checkPaymentStatus() {
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const isPaid = userData.isPaid === true || userData.paymentStatus === true;
+                    
+                    // Update UI elements
+                    const paymentStatus = isPaid ? 'Paid ✅' : 'Not Paid ❌';
+                    document.getElementById('payment-status').textContent = paymentStatus;
+                    
+                    // Update navigation badge
+                    const navBadge = document.getElementById('nav-payment-status');
+                    if (navBadge) {
+                        navBadge.textContent = isPaid ? 'Paid' : 'Not Paid';
+                        navBadge.className = `payment-status-badge ${isPaid ? 'paid' : 'unpaid'}`;
+                    }
+                    
+                    // Show/hide payment notice
+                    const payNotice = document.getElementById('payNotice');
+                    if (payNotice) {
+                        payNotice.style.display = isPaid ? 'none' : 'block';
+                    }
+                    
+                    showStatus(`Payment Status: ${paymentStatus}`, 
+                        isPaid ? 'success' : 'error');
+                        
+                    return isPaid;
+                } else {
+                    showStatus('User document not found. Creating user profile...', 'info');
+                    
+                    // Create user profile
+                    await db.collection('users').doc(currentUser.uid).set({
+                        email: currentUser.email || 'anonymous@example.com',
+                        isPaid: false,
+                        paymentStatus: false,
+                        points: 0,
+                        totalSessions: 0,
+                        totalSessionTime: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    showStatus('✅ User profile created!', 'success');
+                    return false;
+                }
+            } catch (error) {
+                showStatus('❌ Error checking payment status: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // Create test user
+        async function createTestUser() {
+            try {
+                showStatus('Creating test user profile...', 'info');
+                
+                await db.collection('users').doc(currentUser.uid).set({
+                    email: currentUser.email || 'test@example.com',
+                    paymentStatus: true, // Set to true for testing
+                    points: 0,
+                    totalSessions: 0,
+                    totalSessionTime: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showStatus('✅ Test user created with payment status enabled!', 'success');
+                checkPaymentStatus();
+                
+            } catch (error) {
+                showStatus('❌ Error creating test user: ' + error.message, 'error');
+            }
+        }
+        
+        // Open full leaderboard
+        function openFullLeaderboard() {
+            window.open('leaderboard.html', '_blank');
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const container = document.getElementById('status-container');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            container.appendChild(statusDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 5000);
+        }
+        
+        // Clean up listeners when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (sessionListener) sessionListener();
+            if (userStatsListener) userStatsListener();
+            if (leaderboardListener) leaderboardListener();
+            if (sessionTimer) clearInterval(sessionTimer);
+        });
+        
+        // Initialize
+        showStatus('Enhanced session manager loaded with persistent timers!', 'info');
+        updateConnectionStatus();
+    </script>
+</body>
+</html>

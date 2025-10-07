@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Referral Program - Reading Streak</title>
+  <meta name="description" content="Invite friends to Reading Streak and earn rewards.">
+  <meta property="og:title" content="Referral Program - Reading Streak">
+  <meta property="og:description" content="Invite friends to Reading Streak and earn rewards.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    // Optional GA4 bootstrap if GA_ID is provided later
+    (function(){
+      const GA_ID = window.GA_MEASUREMENT_ID || undefined;
+      if(!GA_ID) return;
+      const s=document.createElement('script'); s.async=true; s.src=`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`; document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', GA_ID);
+    })();
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-color: #4CAF50;
+      --secondary-color: #F5F5F5;
+      --accent-color: #FFC107;
+      --text-color: #333333;
+      --white: #FFFFFF;
+      --light-grey: #F8F9FA;
+      --border-color: #E0E0E0;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--secondary-color);
+      min-height: 100vh;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .nav-bar {
+      background: var(--white);
+      border-bottom: 2px solid var(--primary-color);
+      padding: 0 20px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+    }
+
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-color), #45a049);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: var(--light-grey);
+      color: var(--primary-color);
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, var(--accent-color), #ffb300);
+      color: var(--text-color);
+      padding: 60px 40px;
+      text-align: center;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-section h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .hero-section p {
+      font-size: 1.3rem;
+      margin-bottom: 30px;
+      opacity: 0.9;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .referral-link-section {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .referral-link-section h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 30px;
+    }
+
+    .link-container {
+      background: var(--light-grey);
+      border: 2px dashed var(--primary-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .referral-link {
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      color: var(--primary-color);
+      word-break: break-all;
+      background: var(--white);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .copy-button {
+      background: var(--primary-color);
+      color: var(--white);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .copy-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+    }
+
+    .copy-button.copied {
+      background: #45a049;
+    }
+
+    .steps-section {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .steps-section h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .step-card {
+      text-align: center;
+      padding: 30px 20px;
+      background: var(--light-grey);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .step-card:hover {
+      transform: translateY(-5px);
+      background: #e8f5e8;
+      box-shadow: var(--shadow-hover);
+    }
+
+    .step-number {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary-color);
+      color: var(--white);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .step-icon {
+      font-size: 3rem;
+      margin: 20px 0 15px;
+    }
+
+    .step-card h3 {
+      color: var(--text-color);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .step-card p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .rewards-section {
+      background: linear-gradient(135deg, var(--primary-color), #45a049);
+      color: var(--white);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .rewards-section h2 {
+      color: var(--white);
+      margin-bottom: 20px;
+      font-size: 2.2rem;
+    }
+
+    .rewards-section p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+
+    .reward-highlight {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      backdrop-filter: blur(10px);
+    }
+
+    .reward-highlight h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .reward-highlight p {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+
+      .hero-section {
+        padding: 40px 20px;
+      }
+
+      .hero-section h1 {
+        font-size: 2.2rem;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .referral-link {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="nav-bar">
+    <div class="nav-container">
+      <div class="nav-logo">📚 Reading Streak</div>
+      <div class="nav-links">
+        <a href="index.html">🏠 Home</a>
+        <a href="about.html">ℹ️ About</a>
+        <a href="payment.html">💰 Payment</a>
+        <a href="dashboard.html">📊 Dashboard</a>
+        <a href="leaderboard.html">🏆 Leaderboard</a>
+        <a href="ambassador.html">🎓 Ambassador</a>
+        <a href="#" style="opacity:0.5; cursor:not-allowed;" title="Coming Soon">⭐ Premium</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h1>👥 Referral Program</h1>
+      <p>Share Reading Streak with friends and earn amazing rewards for every successful referral!</p>
+    </section>
+
+    <!-- Referral Link Section -->
+    <div class="referral-link-section">
+      <h2>🔗 Your Referral Link</h2>
+      <p>Share this link with your friends to start earning rewards:</p>
+      <div class="link-container">
+        <div class="referral-link" id="refLink">Loading...</div>
+        <button class="copy-button" onclick="copyReferralLink()">📋 Copy Link</button>
+      </div>
+      <p style="color: #666; margin-top: 20px;">Each friend who signs up and pays using your link will earn you rewards!</p>
+    </div>
+
+    <!-- Steps Section -->
+    <div class="steps-section">
+      <h2>🚀 How It Works</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-icon">📤</div>
+          <h3>Share Your Link</h3>
+          <p>Copy and share your unique referral link with friends via WhatsApp, email, or social media</p>
+        </div>
+        
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-icon">💳</div>
+          <h3>Friends Pay</h3>
+          <p>Your friends use your link to register and complete their payment to activate their account</p>
+        </div>
+        
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-icon">🎁</div>
+          <h3>Earn Rewards</h3>
+          <p>You receive instant rewards for every successful referral - the more you refer, the more you earn!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rewards Section -->
+    <div class="rewards-section">
+      <h2>💰 Referral Rewards</h2>
+      <p>Earn amazing rewards for every friend you bring to Reading Streak!</p>
+      
+      <div class="reward-highlight">
+        <h3>🎯 Current Reward Structure</h3>
+        <p><strong>For every 5 paid signups:</strong> Get ₦500 bonus + 1 month free access</p>
+      </div>
+      
+      <div class="reward-highlight">
+        <h3>🏆 Top Performer Bonus</h3>
+        <p><strong>Monthly top referrer:</strong> Additional ₦500 bonus + exclusive Reading Streak merchandise</p>
+      </div>
+      
+      <p style="margin-top: 30px; font-size: 1rem;">Rewards are automatically credited to your account within 24 hours of successful referrals.</p>
+    </div>
+  </div>
+
+  <script>
+    // Generate referral link
+    (function(){
+      const u = new URL(window.location.href);
+      const email = u.searchParams.get('email') || 'your-email';
+      const link = `${window.location.origin}/?ref=${encodeURIComponent(email)}`;
+      document.getElementById('refLink').textContent = link;
+    })();
+
+    // Copy referral link function
+    function copyReferralLink() {
+      const linkElement = document.getElementById('refLink');
+      const link = linkElement.textContent;
+      
+      navigator.clipboard.writeText(link).then(() => {
+        const button = document.querySelector('.copy-button');
+        const originalText = button.textContent;
+        button.textContent = '✅ Copied!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = link;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        const button = document.querySelector('.copy-button');
+        const originalText = button.textContent;
+        button.textContent = '✅ Copied!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
+
+
